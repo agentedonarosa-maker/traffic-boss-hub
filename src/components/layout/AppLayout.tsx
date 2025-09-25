@@ -3,12 +3,12 @@ import { AppSidebar } from "./AppSidebar";
 import { Bell, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Outlet } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
+export function AppLayout() {
+  const { signOut } = useAuth();
 
-export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-background">
@@ -38,7 +38,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </span>
                 </Button>
                 
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={signOut}>
                   <User className="w-5 h-5" />
                 </Button>
               </div>
@@ -47,7 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
-            {children}
+            <Outlet />
           </main>
         </div>
       </div>
