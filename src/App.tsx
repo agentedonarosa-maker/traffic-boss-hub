@@ -12,6 +12,7 @@ import Campaigns from "./pages/Campaigns";
 import Reports from "./pages/Reports";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import ClientPortal from "./pages/ClientPortal";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="reports" element={<Reports />} />
               <Route path="calendar" element={<Calendar />} />
+              <Route path="onboarding" element={<Onboarding />} />
               <Route path="settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />

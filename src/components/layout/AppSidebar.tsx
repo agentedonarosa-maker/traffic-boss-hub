@@ -7,6 +7,7 @@ import {
   Calendar,
   FileText,
   Menu,
+  ClipboardCheck,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -28,6 +29,7 @@ const navigationItems = [
   { title: "Campanhas", url: "/campaigns", icon: Target },
   { title: "Relatórios", url: "/reports", icon: FileText },
   { title: "Agenda", url: "/calendar", icon: Calendar },
+  { title: "Onboarding", url: "/onboarding", icon: ClipboardCheck },
   { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
