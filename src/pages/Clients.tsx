@@ -48,7 +48,9 @@ import { useClients } from "@/hooks/useClients";
 import { useCreateClient } from "@/hooks/useCreateClient";
 import { useUpdateClient } from "@/hooks/useUpdateClient";
 import { useDeleteClient } from "@/hooks/useDeleteClient";
+import { useClientAccess, useGenerateClientAccess } from "@/hooks/useClientAccess";
 import { ClientForm } from "@/components/clients/ClientForm";
+import { toast } from "@/hooks/use-toast";
 import type { ClientFormData } from "@/lib/validations/client";
 import type { Client } from "@/hooks/useClients";
 
@@ -64,6 +66,7 @@ export default function Clients() {
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
+  const generateAccess = useGenerateClientAccess();
 
   const filteredClients = clients.filter(
     (client) =>
@@ -123,6 +126,43 @@ export default function Clients() {
         setClientToDelete(null);
       },
     });
+  };
+
+  const handleGenerateAccess = (clientId: string) => {
+    generateAccess.mutate(clientId);
+  };
+
+  const ClientAccessButton = ({ clientId }: { clientId: string }) => {
+    const { data: access } = useClientAccess(clientId);
+
+    if (access) {
+      const portalUrl = `${window.location.origin}/client-portal/${access.access_token}`;
+      
+      return (
+        <DropdownMenuItem
+          onClick={() => {
+            navigator.clipboard.writeText(portalUrl);
+            toast({
+              title: "Link copiado",
+              description: "O link do portal foi copiado",
+            });
+          }}
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          Copiar Link Portal
+        </DropdownMenuItem>
+      );
+    }
+
+    return (
+      <DropdownMenuItem
+        onClick={() => handleGenerateAccess(clientId)}
+        disabled={generateAccess.isPending}
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        {generateAccess.isPending ? "Gerando..." : "Gerar Acesso"}
+      </DropdownMenuItem>
+    );
   };
 
   const formatCurrency = (value: number | null) => {
@@ -282,6 +322,7 @@ export default function Clients() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <ClientAccessButton clientId={client.id} />
                           <DropdownMenuItem
                             onClick={() => {
                               setSelectedClient(client);

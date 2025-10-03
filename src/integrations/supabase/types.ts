@@ -129,6 +129,41 @@ export type Database = {
           },
         ]
       }
+      client_access: {
+        Row: {
+          access_token: string
+          client_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_accessed_at: string | null
+        }
+        Insert: {
+          access_token: string
+          client_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_accessed_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_accessed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company: string | null
@@ -315,7 +350,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_client_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

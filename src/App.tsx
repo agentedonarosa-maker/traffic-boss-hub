@@ -13,6 +13,7 @@ import Reports from "./pages/Reports";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
+import ClientPortal from "./pages/ClientPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/client-portal/:token" element={<ClientPortal />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <AppLayout />
