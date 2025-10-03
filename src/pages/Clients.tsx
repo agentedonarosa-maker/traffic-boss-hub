@@ -174,19 +174,19 @@ export default function Clients() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Clientes</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Clientes</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Gerencie seus clientes de tráfego pago
           </p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-primary">
+            <Button className="bg-gradient-primary w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Novo Cliente
             </Button>
@@ -220,17 +220,17 @@ export default function Clients() {
       </Card>
 
       {/* Estatísticas Rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="p-4 shadow-card">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Building className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl md:text-2xl font-bold text-foreground">
                 {clients.length}
               </p>
-              <p className="text-sm text-muted-foreground">Total de Clientes</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Total de Clientes</p>
             </div>
           </div>
         </Card>
@@ -241,10 +241,10 @@ export default function Clients() {
               <Building className="w-5 h-5 text-success" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl md:text-2xl font-bold text-foreground">
                 {clients.length}
               </p>
-              <p className="text-sm text-muted-foreground">Clientes Ativos</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Clientes Ativos</p>
             </div>
           </div>
         </Card>
@@ -255,10 +255,10 @@ export default function Clients() {
               <DollarSign className="w-5 h-5 text-warning" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-xl md:text-2xl font-bold text-foreground">
                 {formatCurrency(totalBudget)}
               </p>
-              <p className="text-sm text-muted-foreground">Orçamento Total</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Orçamento Total</p>
             </div>
           </div>
         </Card>
@@ -266,21 +266,23 @@ export default function Clients() {
 
       {/* Tabela de Clientes */}
       <Card className="shadow-card">
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredClients.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 {searchTerm
                   ? "Nenhum cliente encontrado com esse termo."
                   : "Nenhum cliente cadastrado ainda."}
               </p>
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto -mx-4 md:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Cliente</TableHead>
@@ -352,12 +354,14 @@ export default function Clients() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </Card>
+                 ))}
+               </TableBody>
+             </Table>
+              </div>
+            </div>
+           )}
+         </div>
+       </Card>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -388,7 +392,7 @@ export default function Clients() {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Cliente</DialogTitle>
           </DialogHeader>
@@ -444,6 +448,7 @@ export default function Clients() {
                 <Button
                   variant="outline"
                   onClick={() => setIsViewDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Fechar
                 </Button>

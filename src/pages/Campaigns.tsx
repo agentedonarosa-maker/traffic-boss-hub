@@ -219,23 +219,24 @@ export default function Campaigns() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Campanhas</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Campanhas</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Monitore e gerencie suas campanhas de tráfego pago
           </p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <Button 
-            className="bg-gradient-primary"
+            className="bg-gradient-primary w-full sm:w-auto"
             onClick={() => setIsCreateDialogOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nova Campanha
+            <span className="hidden sm:inline">Nova Campanha</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -250,7 +251,7 @@ export default function Campaigns() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <MetricCard
           title="Investimento Total"
           value={formatCurrency(totalSpend)}
@@ -284,8 +285,8 @@ export default function Campaigns() {
 
       {/* Filtros */}
       <Card className="p-4 shadow-card">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Buscar campanhas ou clientes..."
@@ -296,7 +297,7 @@ export default function Campaigns() {
           </div>
           
           <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Todos os clientes" />
             </SelectTrigger>
             <SelectContent>
@@ -310,7 +311,7 @@ export default function Campaigns() {
           </Select>
           
           <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Todas as plataformas" />
             </SelectTrigger>
             <SelectContent>
@@ -324,21 +325,22 @@ export default function Campaigns() {
       </Card>
 
       <Card className="shadow-card">
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredCampaigns.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 {searchTerm
                   ? "Nenhuma campanha encontrada com esse termo."
                   : "Nenhuma campanha cadastrada ainda."}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-4 md:mx-0">
+              <div className="inline-block min-w-full align-middle">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -425,13 +427,14 @@ export default function Campaigns() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </Card>
+                 })}
+               </TableBody>
+             </Table>
+              </div>
+           </div>
+           )}
+         </div>
+       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">

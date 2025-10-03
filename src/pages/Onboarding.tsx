@@ -116,18 +116,18 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">
+    <div className="container mx-auto py-4 md:py-6 px-4 max-w-6xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2">
           📋 Onboarding de Clientes
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm md:text-base text-muted-foreground">
           Processo profissional para iniciar contratos e gerir novos clientes
         </p>
       </div>
 
-      <Tabs defaultValue="contract" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+      <Tabs defaultValue="contract" className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="contract" className="gap-2">
             <FileText className="w-4 h-4" />
             Contrato
@@ -149,8 +149,8 @@ export default function Onboarding() {
                 Preencha as informações e envie automaticamente para o email do cliente
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
+            <CardContent className="space-y-4 md:space-y-6">
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="client">Cliente *</Label>
                   <Select
@@ -188,7 +188,7 @@ export default function Onboarding() {
                   id="contract"
                   value={contractContent}
                   onChange={(e) => setContractContent(e.target.value)}
-                  className="min-h-[500px] font-mono text-sm"
+                  className="min-h-[300px] md:min-h-[500px] font-mono text-xs md:text-sm"
                   placeholder="Digite ou edite o contrato..."
                 />
                 <p className="text-xs text-muted-foreground">
@@ -196,11 +196,11 @@ export default function Onboarding() {
                 </p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={handleSendContract}
                   disabled={sendContract.isPending}
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto"
                   size="lg"
                 >
                   {sendContract.isPending ? (
@@ -211,13 +211,15 @@ export default function Onboarding() {
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Enviar Contrato por Email
+                      <span className="hidden sm:inline">Enviar Contrato por Email</span>
+                      <span className="sm:hidden">Enviar Contrato</span>
                     </>
                   )}
                 </Button>
 
                 <Button
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => setContractContent(DEFAULT_CONTRACT)}
                   disabled={sendContract.isPending}
                 >
@@ -228,8 +230,8 @@ export default function Onboarding() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="guide" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+        <TabsContent value="guide" className="space-y-4 md:space-y-6">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

@@ -80,15 +80,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           Visão geral do desempenho das suas campanhas
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <MetricCard
           title="Total de Clientes"
           value={dashboardMetrics?.totalClients || 0}
@@ -120,7 +120,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <MetricCard
           title="Impressões"
           value={(dashboardMetrics?.totalImpressions || 0).toLocaleString()}
@@ -152,9 +152,9 @@ export default function Dashboard() {
       </div>
 
       <Card className="shadow-card">
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-lg md:text-xl font-semibold text-foreground">
               Campanhas Recentes
             </h2>
             <Button 
@@ -168,12 +168,14 @@ export default function Dashboard() {
 
           {recentCampaigns.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Nenhuma campanha cadastrada ainda.
               </p>
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto -mx-4 md:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
@@ -204,22 +206,24 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell>{getStatusBadge(campaign.status)}</TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </Card>
+                   );
+                 })}
+               </TableBody>
+             </Table>
+              </div>
+            </div>
+           )}
+         </div>
+       </Card>
 
       <Card className="shadow-card">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
+        <div className="p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4">
             Ações Rápidas
           </h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <Button 
-              className="bg-gradient-primary"
+              className="bg-gradient-primary w-full sm:w-auto"
               onClick={() => navigate("/clients")}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -227,6 +231,7 @@ export default function Dashboard() {
             </Button>
             <Button 
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => navigate("/campaigns")}
             >
               <Target className="w-4 h-4 mr-2" />
@@ -234,6 +239,7 @@ export default function Dashboard() {
             </Button>
             <Button 
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => navigate("/reports")}
             >
               <FileText className="w-4 h-4 mr-2" />

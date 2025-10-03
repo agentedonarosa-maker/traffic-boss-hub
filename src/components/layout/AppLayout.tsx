@@ -16,9 +16,9 @@ export function AppLayout() {
 
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-            <div className="flex items-center justify-between px-6 h-full">
-              <div className="flex items-center gap-4">
+          <header className="h-14 md:h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+            <div className="flex items-center justify-between px-4 md:px-6 h-full">
+              <div className="flex items-center gap-2 md:gap-4">
                 <SidebarTrigger />
                 
                 <div className="relative hidden md:block">
@@ -30,16 +30,16 @@ export function AppLayout() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="w-5 h-5" />
+              <div className="flex items-center gap-2 md:gap-3">
+                <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
+                  <Bell className="w-4 h-4 md:w-5 md:h-5" />
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full text-xs flex items-center justify-center text-white">
                     3
                   </span>
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={signOut}>
-                  <User className="w-5 h-5" />
+                <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9 md:h-10 md:w-10">
+                  <User className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
               </div>
             </div>
