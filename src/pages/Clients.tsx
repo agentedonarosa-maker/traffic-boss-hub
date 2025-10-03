@@ -17,18 +17,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Plus,
   Search,
   Eye,
   Edit,
+  Trash2,
   MoreVertical,
   Building,
-  Mail,
-  Phone,
   DollarSign,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -36,54 +44,94 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Mock data
-const clients = [
-  {
-    id: 1,
-    name: "João Silva",
-    company: "Loja XYZ",
-    email: "joao@lojaxyz.com",
-    phone: "(11) 99999-9999",
-    niche: "E-commerce",
-    monthlyBudget: "R$ 5.000",
-    campaigns: 3,
-    status: "Ativo",
-  },
-  {
-    id: 2,
-    name: "Maria Santos",
-    company: "Empresa ABC",
-    email: "maria@empresaabc.com",
-    phone: "(11) 88888-8888",
-    niche: "Serviços",
-    monthlyBudget: "R$ 8.000",
-    campaigns: 5,
-    status: "Ativo",
-  },
-  {
-    id: 3,
-    name: "Pedro Costa",
-    company: "StartupTech",
-    email: "pedro@startuptech.com",
-    phone: "(11) 77777-7777",
-    niche: "Tecnologia",
-    monthlyBudget: "R$ 3.000",
-    campaigns: 2,
-    status: "Pausado",
-  },
-];
+import { useClients } from "@/hooks/useClients";
+import { useCreateClient } from "@/hooks/useCreateClient";
+import { useUpdateClient } from "@/hooks/useUpdateClient";
+import { useDeleteClient } from "@/hooks/useDeleteClient";
+import { ClientForm } from "@/components/clients/ClientForm";
+import type { ClientFormData } from "@/lib/validations/client";
+import type { Client } from "@/hooks/useClients";
 
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+
+  const { data: clients = [], isLoading } = useClients();
+  const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
+  const deleteClient = useDeleteClient();
 
   const filteredClients = clients.filter(
     (client) =>
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.niche.toLowerCase().includes(searchTerm.toLowerCase())
+      client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.niche?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalBudget = clients.reduce(
+    (sum, client) => sum + (client.monthly_budget || 0),
+    0
+  );
+
+  const handleCreateClient = (data: ClientFormData) => {
+    createClient.mutate(
+      {
+        name: data.name,
+        company: data.company,
+        contact: data.contact,
+        niche: data.niche,
+        monthly_budget: data.monthly_budget,
+        strategic_notes: data.strategic_notes,
+      },
+      {
+        onSuccess: () => {
+          setIsCreateDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleUpdateClient = (data: ClientFormData) => {
+    if (!selectedClient) return;
+    updateClient.mutate(
+      {
+        id: selectedClient.id,
+        name: data.name,
+        company: data.company,
+        contact: data.contact,
+        niche: data.niche,
+        monthly_budget: data.monthly_budget,
+        strategic_notes: data.strategic_notes,
+      },
+      {
+        onSuccess: () => {
+          setIsEditDialogOpen(false);
+          setSelectedClient(null);
+        },
+      }
+    );
+  };
+
+  const handleDeleteClient = () => {
+    if (!clientToDelete) return;
+    deleteClient.mutate(clientToDelete, {
+      onSuccess: () => {
+        setClientToDelete(null);
+      },
+    });
+  };
+
+  const formatCurrency = (value: number | null) => {
+    if (!value) return "R$ 0,00";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -96,7 +144,7 @@ export default function Clients() {
           </p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary">
               <Plus className="w-4 h-4 mr-2" />
@@ -107,64 +155,11 @@ export default function Clients() {
             <DialogHeader>
               <DialogTitle>Adicionar Novo Cliente</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input id="name" placeholder="Nome completo" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Empresa</Label>
-                  <Input id="company" placeholder="Nome da empresa" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" placeholder="email@exemplo.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" placeholder="(11) 99999-9999" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="niche">Nicho</Label>
-                  <Input id="niche" placeholder="Ex: E-commerce, Serviços" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="budget">Orçamento Mensal</Label>
-                  <Input id="budget" placeholder="R$ 5.000" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Observações Estratégicas</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Objetivos, diferenciais do negócio, persona..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  className="bg-gradient-primary"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Salvar Cliente
-                </Button>
-              </div>
-            </div>
+            <ClientForm
+              onSubmit={handleCreateClient}
+              onCancel={() => setIsCreateDialogOpen(false)}
+              isLoading={createClient.isPending}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -185,14 +180,16 @@ export default function Clients() {
       </Card>
 
       {/* Estatísticas Rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4 shadow-card">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Building className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{clients.length}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {clients.length}
+              </p>
               <p className="text-sm text-muted-foreground">Total de Clientes</p>
             </div>
           </div>
@@ -205,7 +202,7 @@ export default function Clients() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {clients.filter(c => c.status === "Ativo").length}
+                {clients.length}
               </p>
               <p className="text-sm text-muted-foreground">Clientes Ativos</p>
             </div>
@@ -218,20 +215,10 @@ export default function Clients() {
               <DollarSign className="w-5 h-5 text-warning" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">R$ 16K</p>
+              <p className="text-2xl font-bold text-foreground">
+                {formatCurrency(totalBudget)}
+              </p>
               <p className="text-sm text-muted-foreground">Orçamento Total</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Building className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">10</p>
-              <p className="text-sm text-muted-foreground">Campanhas Totais</p>
             </div>
           </div>
         </Card>
@@ -240,82 +227,215 @@ export default function Clients() {
       {/* Tabela de Clientes */}
       <Card className="shadow-card">
         <div className="p-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead>Nicho</TableHead>
-                <TableHead>Orçamento</TableHead>
-                <TableHead>Campanhas</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-foreground">{client.name}</p>
-                      <p className="text-sm text-muted-foreground">{client.company}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-3 h-3 text-muted-foreground" />
-                        {client.email}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-3 h-3 text-muted-foreground" />
-                        {client.phone}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{client.niche}</TableCell>
-                  <TableCell className="font-medium text-success">{client.monthlyBudget}</TableCell>
-                  <TableCell>
-                    <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm">
-                      {client.campaigns} ativas
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        client.status === "Ativo"
-                          ? "bg-success/10 text-success"
-                          : "bg-warning/10 text-warning"
-                      }`}
-                    >
-                      {client.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Visualizar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredClients.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                {searchTerm
+                  ? "Nenhum cliente encontrado com esse termo."
+                  : "Nenhum cliente cadastrado ainda."}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Nicho</TableHead>
+                  <TableHead>Orçamento</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {client.name}
+                        </p>
+                        {client.company && (
+                          <p className="text-sm text-muted-foreground">
+                            {client.company}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm">
+                        {client.contact || "Não informado"}
+                      </p>
+                    </TableCell>
+                    <TableCell>{client.niche || "—"}</TableCell>
+                    <TableCell className="font-medium text-success">
+                      {formatCurrency(client.monthly_budget)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setIsViewDialogOpen(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Visualizar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setClientToDelete(client.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+          </DialogHeader>
+          {selectedClient && (
+            <ClientForm
+              defaultValues={{
+                name: selectedClient.name,
+                company: selectedClient.company || "",
+                contact: selectedClient.contact || "",
+                niche: selectedClient.niche || "",
+                monthly_budget: selectedClient.monthly_budget || 0,
+                strategic_notes: selectedClient.strategic_notes || "",
+              }}
+              onSubmit={handleUpdateClient}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setSelectedClient(null);
+              }}
+              isLoading={updateClient.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+          </DialogHeader>
+          {selectedClient && (
+            <div className="space-y-4 py-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Nome</p>
+                <p className="text-foreground">{selectedClient.name}</p>
+              </div>
+              {selectedClient.company && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Empresa
+                  </p>
+                  <p className="text-foreground">{selectedClient.company}</p>
+                </div>
+              )}
+              {selectedClient.contact && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Contato
+                  </p>
+                  <p className="text-foreground">{selectedClient.contact}</p>
+                </div>
+              )}
+              {selectedClient.niche && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Nicho
+                  </p>
+                  <p className="text-foreground">{selectedClient.niche}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Orçamento Mensal
+                </p>
+                <p className="text-foreground">
+                  {formatCurrency(selectedClient.monthly_budget)}
+                </p>
+              </div>
+              {selectedClient.strategic_notes && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Observações Estratégicas
+                  </p>
+                  <p className="text-foreground">
+                    {selectedClient.strategic_notes}
+                  </p>
+                </div>
+              )}
+              <div className="flex justify-end pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewDialogOpen(false)}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={!!clientToDelete}
+        onOpenChange={() => setClientToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este cliente? Esta ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteClient}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
