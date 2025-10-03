@@ -70,6 +70,7 @@ export default function Campaigns() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState("all");
+  const [selectedClient, setSelectedClient] = useState("all");
 
   const { data: campaigns = [], isLoading } = useCampaigns();
   const { data: clients = [] } = useClients();
@@ -87,7 +88,10 @@ export default function Campaigns() {
     const matchesPlatform = 
       selectedPlatform === "all" || campaign.platform === selectedPlatform;
     
-    return matchesSearch && matchesPlatform;
+    const matchesClient = 
+      selectedClient === "all" || campaign.client_id === selectedClient;
+    
+    return matchesSearch && matchesPlatform && matchesClient;
   });
 
   const getCampaignMetrics = (campaignId: string) => {
@@ -290,6 +294,20 @@ export default function Campaigns() {
               className="pl-10"
             />
           </div>
+          
+          <Select value={selectedClient} onValueChange={setSelectedClient}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Todos os clientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os clientes</SelectItem>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
           <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
             <SelectTrigger className="w-[180px]">
