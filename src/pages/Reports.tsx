@@ -4,15 +4,27 @@ import ReportView from '@/components/reports/ReportView';
 import { useGenerateReport } from '@/hooks/useGenerateReport';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { generateReportPDF } from '@/lib/pdfExport';
 
 export default function Reports() {
   const { generateReport, reportData, loading, clearReport } = useGenerateReport();
 
   const handleExport = () => {
-    toast({
-      title: "Exportação em desenvolvimento",
-      description: "A funcionalidade de exportar PDF será implementada em breve",
-    });
+    if (!reportData) return;
+    
+    try {
+      generateReportPDF(reportData);
+      toast({
+        title: "PDF exportado com sucesso",
+        description: "O relatório foi baixado no seu dispositivo",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao exportar PDF",
+        description: "Ocorreu um erro ao gerar o arquivo PDF",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
