@@ -30,23 +30,27 @@ export const useClientAccess = (clientId?: string) => {
   });
 };
 
+// Função para gerar token único no lado do cliente
+const generateToken = () => {
+  const array = new Uint8Array(24);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
 export const useGenerateClientAccess = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (clientId: string) => {
-      // Gerar token
-      const { data: tokenData, error: tokenError } = await supabase
-        .rpc("generate_client_token");
-
-      if (tokenError) throw tokenError;
+      // Gerar token único
+      const token = generateToken();
 
       // Criar ou atualizar acesso do cliente
       const { data, error } = await supabase
         .from("client_access")
         .upsert({
           client_id: clientId,
-          access_token: tokenData,
+          access_token: token,
           is_active: true,
         })
         .select()
