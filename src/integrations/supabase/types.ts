@@ -170,6 +170,7 @@ export type Database = {
       }
       integrations: {
         Row: {
+          client_id: string | null
           created_at: string
           credentials: Json
           id: string
@@ -177,9 +178,10 @@ export type Database = {
           last_sync_at: string | null
           platform: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           credentials: Json
           id?: string
@@ -187,9 +189,10 @@ export type Database = {
           last_sync_at?: string | null
           platform: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           credentials?: Json
           id?: string
@@ -197,9 +200,17 @@ export type Database = {
           last_sync_at?: string | null
           platform?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "integrations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meetings: {
         Row: {

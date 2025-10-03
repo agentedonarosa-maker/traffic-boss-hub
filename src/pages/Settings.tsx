@@ -5,14 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Settings as SettingsIcon, Plug, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useCreateIntegration } from "@/hooks/useCreateIntegration";
 import { useDeleteIntegration } from "@/hooks/useDeleteIntegration";
+import { useClients } from "@/hooks/useClients";
 
 export default function Settings() {
-  const { data: integrations = [], isLoading } = useIntegrations();
+  const { data: clients = [] } = useClients();
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const { data: integrations = [], isLoading } = useIntegrations(selectedClientId);
   const createIntegration = useCreateIntegration();
   const deleteIntegration = useDeleteIntegration();
 
@@ -37,7 +41,10 @@ export default function Settings() {
 
   const handleMetaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedClientId) return;
+    
     createIntegration.mutate({
+      client_id: selectedClientId,
       platform: 'meta',
       credentials: {
         access_token: metaAccessToken,
@@ -53,7 +60,10 @@ export default function Settings() {
 
   const handleGoogleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedClientId) return;
+    
     createIntegration.mutate({
+      client_id: selectedClientId,
       platform: 'google',
       credentials: {
         client_id: googleClientId,
@@ -71,7 +81,10 @@ export default function Settings() {
 
   const handleTikTokSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedClientId) return;
+    
     createIntegration.mutate({
+      client_id: selectedClientId,
       platform: 'tiktok',
       credentials: {
         access_token: tiktokAccessToken,
@@ -98,11 +111,35 @@ export default function Settings() {
         <SettingsIcon className="w-8 h-8 text-primary" />
         <div>
           <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-          <p className="text-muted-foreground">Gerencie suas integrações com plataformas de anúncios</p>
+          <p className="text-muted-foreground">Gerencie suas integrações com plataformas de anúncios por cliente</p>
         </div>
       </div>
 
-      <Tabs defaultValue="meta" className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle>Selecione o Cliente</CardTitle>
+          <CardDescription>
+            Escolha o cliente para gerenciar suas integrações de anúncios
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name} {client.company && `(${client.company})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {selectedClientId && (
+        <Tabs defaultValue="meta" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="meta" className="gap-2">
             <Plug className="w-4 h-4" />
@@ -335,7 +372,8 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      )}
 
       <AlertDialog open={!!integrationToDelete} onOpenChange={() => setIntegrationToDelete(null)}>
         <AlertDialogContent>

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 interface CreateIntegrationData {
+  client_id: string;
   platform: 'meta' | 'google' | 'tiktok';
   credentials: {
     access_token?: string;
@@ -26,7 +27,7 @@ export const useCreateIntegration = () => {
       const { data: integration, error } = await supabase
         .from("integrations")
         .insert({
-          user_id: user.id,
+          client_id: data.client_id,
           platform: data.platform,
           credentials: data.credentials,
           is_active: true,

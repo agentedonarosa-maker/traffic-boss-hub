@@ -20,19 +20,24 @@ export interface Integration {
   updated_at: string;
 }
 
-export const useIntegrations = () => {
+export const useIntegrations = (clientId?: string) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["integrations", user?.id],
+    queryKey: ["integrations", clientId],
     queryFn: async () => {
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("integrations")
         .select("*")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+      if (clientId) {
+        query = query.eq("client_id", clientId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as Integration[];
