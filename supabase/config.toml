@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.manage-integration-credentials]
 verify_jwt = true
 
+[functions.migrate-credentials-to-vault]
+verify_jwt = false
+
 [functions.sync-meta-ads]
 verify_jwt = false
 
