@@ -1,13 +1,22 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Bell, Search, User } from "lucide-react";
+import { Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationsPopover } from "./NotificationsPopover";
+import { useState } from "react";
 
 export function AppLayout() {
   const { signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await signOut();
+    // No need to reset loading state as user will be redirected
+  };
 
   return (
     <SidebarProvider>
@@ -31,24 +40,20 @@ export function AppLayout() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="relative h-10 w-10 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105"
-                >
-                  <Bell className="w-5 h-5 text-muted-foreground" />
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full text-[10px] font-medium flex items-center justify-center text-primary-foreground shadow-md animate-pulse">
-                    3
-                  </span>
-                </Button>
+                <NotificationsPopover />
                 
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={signOut} 
-                  className="h-10 w-10 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="h-10 w-10 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <User className="w-5 h-5 text-muted-foreground" />
+                  {isLoggingOut ? (
+                    <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <LogOut className="w-5 h-5 text-muted-foreground" />
+                  )}
                 </Button>
               </div>
             </div>

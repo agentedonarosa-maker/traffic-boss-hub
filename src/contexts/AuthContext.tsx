@@ -80,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.error(error.message);
     } else {
       toast.success('Logout realizado com sucesso!');
+      // Redirect to auth page after successful logout
+      window.location.href = '/auth';
     }
   };
 
