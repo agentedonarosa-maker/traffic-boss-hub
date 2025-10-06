@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.send-contract]
 verify_jwt = false
 
+[functions.manage-integration-credentials]
+verify_jwt = true
+
 [functions.sync-meta-ads]
 verify_jwt = false
 

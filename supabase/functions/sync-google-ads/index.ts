@@ -51,7 +51,25 @@ Deno.serve(async (req: Request) => {
 
     for (const integration of integrations) {
       try {
-        const credentials = integration.credentials as GoogleAdsCredentials;
+        // Buscar credenciais do Vault
+        let credentials: GoogleAdsCredentials;
+        
+        if (integration.vault_secret_name) {
+          const { data: secretData } = await supabaseClient.rpc('vault.decrypted_secret', {
+            secret_name: integration.vault_secret_name
+          });
+          
+          if (secretData) {
+            credentials = JSON.parse(secretData.decrypted_secret);
+          } else {
+            throw new Error('Failed to retrieve credentials from Vault');
+          }
+        } else {
+          // Fallback para credenciais antigas (será removido após migração)
+          credentials = integration.credentials as GoogleAdsCredentials;
+        }
+        
+        console.log(`[sync-google-ads] Processing integration ${integration.id} (credentials: ***MASKED***)`);
         
         if (!credentials.refresh_token || !credentials.customer_id || !credentials.developer_token) {
           console.error(`Integração ${integration.id}: credenciais inválidas`);

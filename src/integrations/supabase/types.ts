@@ -205,7 +205,7 @@ export type Database = {
       }
       integrations: {
         Row: {
-          client_id: string | null
+          client_id: string
           created_at: string
           credentials: Json
           id: string
@@ -213,10 +213,11 @@ export type Database = {
           last_sync_at: string | null
           platform: string
           updated_at: string
-          user_id: string | null
+          user_id: string
+          vault_secret_name: string | null
         }
         Insert: {
-          client_id?: string | null
+          client_id: string
           created_at?: string
           credentials: Json
           id?: string
@@ -224,10 +225,11 @@ export type Database = {
           last_sync_at?: string | null
           platform: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
+          vault_secret_name?: string | null
         }
         Update: {
-          client_id?: string | null
+          client_id?: string
           created_at?: string
           credentials?: Json
           id?: string
@@ -235,9 +237,17 @@ export type Database = {
           last_sync_at?: string | null
           platform?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
+          vault_secret_name?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_integrations_client"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "integrations_client_id_fkey"
             columns: ["client_id"]

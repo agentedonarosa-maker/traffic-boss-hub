@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
     // Buscar todas as integrações ativas do Meta Ads
     const { data: integrations, error: intError } = await supabaseAdmin
       .from("integrations")
-      .select("id, client_id, user_id, credentials, last_sync_at")
+      .select("id, client_id, user_id, credentials, vault_secret_name, last_sync_at")
       .eq("platform", "meta_ads")
       .eq("is_active", true);
 
@@ -57,13 +57,33 @@ Deno.serve(async (req: Request) => {
 
     for (const integration of integrations) {
       try {
-        const credentials = integration.credentials as MetaAdsCredentials;
+        // Buscar credenciais do Vault se disponível
+        let credentials: MetaAdsCredentials;
+        
+        if (integration.vault_secret_name) {
+          const { data: secretData } = await supabaseAdmin.rpc('vault.decrypted_secret', {
+            secret_name: integration.vault_secret_name
+          });
+          
+          if (secretData?.decrypted_secret) {
+            credentials = JSON.parse(secretData.decrypted_secret);
+          } else {
+            console.error(`Integração ${integration.id}: falha ao buscar credenciais do Vault`);
+            errors.push({ integration_id: integration.id, error: "Falha ao buscar credenciais do Vault" });
+            continue;
+          }
+        } else {
+          // Fallback para credenciais antigas
+          credentials = integration.credentials as MetaAdsCredentials;
+        }
         
         if (!credentials.access_token || !credentials.ad_account_id) {
           console.error(`Integração ${integration.id}: credenciais inválidas`);
           errors.push({ integration_id: integration.id, error: "Credenciais inválidas" });
           continue;
         }
+        
+        console.log(`Processando integração ${integration.id} (credenciais: ***MASKED***)`)
 
         // Buscar campanhas do cliente
         const { data: campaigns } = await supabaseAdmin

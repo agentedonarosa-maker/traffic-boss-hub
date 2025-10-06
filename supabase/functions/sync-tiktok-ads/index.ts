@@ -48,7 +48,25 @@ Deno.serve(async (req: Request) => {
 
     for (const integration of integrations) {
       try {
-        const credentials = integration.credentials as TikTokAdsCredentials;
+        // Buscar credenciais do Vault
+        let credentials: TikTokAdsCredentials;
+        
+        if (integration.vault_secret_name) {
+          const { data: secretData } = await supabaseClient.rpc('vault.decrypted_secret', {
+            secret_name: integration.vault_secret_name
+          });
+          
+          if (secretData) {
+            credentials = JSON.parse(secretData.decrypted_secret);
+          } else {
+            throw new Error('Failed to retrieve credentials from Vault');
+          }
+        } else {
+          // Fallback para credenciais antigas (será removido após migração)
+          credentials = integration.credentials as TikTokAdsCredentials;
+        }
+        
+        console.log(`[sync-tiktok-ads] Processing integration ${integration.id} (credentials: ***MASKED***)`);
         
         if (!credentials.access_token || !credentials.advertiser_id) {
           console.error(`Integração ${integration.id}: credenciais inválidas`);

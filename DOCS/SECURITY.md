@@ -180,9 +180,22 @@ console.log('Integration created:', {
 - [x] Edge function segura para validação de tokens
 - [x] Índice otimizado para performance
 - [x] Documentação de segurança criada
+- [x] **Criptografia com Supabase Vault implementada**
+  - Credenciais de integrações armazenadas de forma criptografada
+  - Edge function `manage-integration-credentials` para gerenciar secrets
+  - Máscara automática de dados sensíveis em logs
+  - Campos `user_id` e `client_id` obrigatórios em `integrations`
+  - Foreign key constraint para integridade referencial
 
 ### ⚠️ Ação Necessária (Usuário)
 - [ ] Ativar "Leaked Password Protection" no Supabase Dashboard
+- [ ] **Migrar credenciais existentes**: Execute a query SQL abaixo para migrar integrações existentes para o Vault:
+
+```sql
+-- Esta query será executada automaticamente pela aplicação na próxima sincronização
+-- Ou pode ser executada manualmente no SQL Editor do Supabase
+SELECT id, platform FROM integrations WHERE vault_secret_name IS NULL;
+```
 
 ### ℹ️ Avisos Informativos (Não Críticos)
 - **Extension in Public Schema**: As extensões `pg_cron` e `pg_net` foram instaladas no schema público para funcionalidade de cronjobs. Isso é um aviso informativo, não representa risco de segurança significativo.
