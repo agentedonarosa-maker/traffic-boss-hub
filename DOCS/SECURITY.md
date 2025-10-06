@@ -184,6 +184,9 @@ console.log('Integration created:', {
 ### ⚠️ Ação Necessária (Usuário)
 - [ ] Ativar "Leaked Password Protection" no Supabase Dashboard
 
+### ℹ️ Avisos Informativos (Não Críticos)
+- **Extension in Public Schema**: As extensões `pg_cron` e `pg_net` foram instaladas no schema público para funcionalidade de cronjobs. Isso é um aviso informativo, não representa risco de segurança significativo.
+
 ### 💡 Melhorias Recomendadas (Opcional)
 - [ ] Implementar Supabase Vault para credenciais
 - [ ] Ou implementar criptografia application-level

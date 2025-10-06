@@ -30,6 +30,8 @@ export default function Settings() {
   const [googleClientId, setGoogleClientId] = useState("");
   const [googleClientSecret, setGoogleClientSecret] = useState("");
   const [googleRefreshToken, setGoogleRefreshToken] = useState("");
+  const [googleCustomerId, setGoogleCustomerId] = useState("");
+  const [googleDeveloperToken, setGoogleDeveloperToken] = useState("");
 
   // TikTok Ads Form
   const [tiktokAccessToken, setTiktokAccessToken] = useState("");
@@ -45,10 +47,10 @@ export default function Settings() {
     
     createIntegration.mutate({
       client_id: selectedClientId,
-      platform: 'meta',
+      platform: 'meta_ads',
       credentials: {
         access_token: metaAccessToken,
-        account_id: metaAccountId,
+        ad_account_id: metaAccountId,
       },
     }, {
       onSuccess: () => {
@@ -64,17 +66,21 @@ export default function Settings() {
     
     createIntegration.mutate({
       client_id: selectedClientId,
-      platform: 'google',
+      platform: 'google_ads',
       credentials: {
         client_id: googleClientId,
         client_secret: googleClientSecret,
         refresh_token: googleRefreshToken,
+        customer_id: googleCustomerId,
+        developer_token: googleDeveloperToken,
       },
     }, {
       onSuccess: () => {
         setGoogleClientId("");
         setGoogleClientSecret("");
         setGoogleRefreshToken("");
+        setGoogleCustomerId("");
+        setGoogleDeveloperToken("");
       }
     });
   };
@@ -85,7 +91,7 @@ export default function Settings() {
     
     createIntegration.mutate({
       client_id: selectedClientId,
-      platform: 'tiktok',
+      platform: 'tiktok_ads',
       credentials: {
         access_token: tiktokAccessToken,
         advertiser_id: tiktokAdvertiserId,
@@ -145,19 +151,19 @@ export default function Settings() {
             <Plug className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Meta Ads</span>
             <span className="sm:hidden">Meta</span>
-            {getIntegration('meta') && <CheckCircle2 className="w-3 h-3 text-success" />}
+            {getIntegration('meta_ads') && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
           <TabsTrigger value="google" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
             <Plug className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Google Ads</span>
             <span className="sm:hidden">Google</span>
-            {getIntegration('google') && <CheckCircle2 className="w-3 h-3 text-success" />}
+            {getIntegration('google_ads') && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
           <TabsTrigger value="tiktok" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
             <Plug className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">TikTok Ads</span>
             <span className="sm:hidden">TikTok</span>
-            {getIntegration('tiktok') && <CheckCircle2 className="w-3 h-3 text-success" />}
+            {getIntegration('tiktok_ads') && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
         </TabsList>
 
@@ -172,7 +178,7 @@ export default function Settings() {
                     Conecte sua conta do Meta Business Manager para sincronizar campanhas
                   </CardDescription>
                 </div>
-                {getIntegration('meta') && (
+                {getIntegration('meta_ads') && (
                   <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Conectado
@@ -181,14 +187,14 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('meta') ? (
+              {getIntegration('meta_ads') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('meta')!.id)}
+                    onClick={() => setIntegrationToDelete(getIntegration('meta_ads')!.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Desconectar
@@ -240,7 +246,7 @@ export default function Settings() {
                     Conecte sua conta do Google Ads para sincronizar campanhas
                   </CardDescription>
                 </div>
-                {getIntegration('google') && (
+                {getIntegration('google_ads') && (
                   <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Conectado
@@ -249,14 +255,14 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('google') ? (
+              {getIntegration('google_ads') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('google')!.id)}
+                    onClick={() => setIntegrationToDelete(getIntegration('google_ads')!.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Desconectar
@@ -264,26 +270,28 @@ export default function Settings() {
                 </div>
               ) : (
                 <form onSubmit={handleGoogleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="google-client-id">Client ID</Label>
-                    <Input
-                      id="google-client-id"
-                      placeholder="xxxxx.apps.googleusercontent.com"
-                      value={googleClientId}
-                      onChange={(e) => setGoogleClientId(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="google-client-secret">Client Secret</Label>
-                    <Input
-                      id="google-client-secret"
-                      type="password"
-                      placeholder="GOCSPX-xxxxx"
-                      value={googleClientSecret}
-                      onChange={(e) => setGoogleClientSecret(e.target.value)}
-                      required
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="google-client-id">Client ID</Label>
+                      <Input
+                        id="google-client-id"
+                        placeholder="xxxxx.apps.googleusercontent.com"
+                        value={googleClientId}
+                        onChange={(e) => setGoogleClientId(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="google-client-secret">Client Secret</Label>
+                      <Input
+                        id="google-client-secret"
+                        type="password"
+                        placeholder="GOCSPX-xxxxx"
+                        value={googleClientSecret}
+                        onChange={(e) => setGoogleClientSecret(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="google-refresh-token">Refresh Token</Label>
@@ -295,10 +303,36 @@ export default function Settings() {
                       onChange={(e) => setGoogleRefreshToken(e.target.value)}
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Configure OAuth 2.0 no Google Cloud Console
-                    </p>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="google-customer-id">Customer ID</Label>
+                      <Input
+                        id="google-customer-id"
+                        placeholder="1234567890"
+                        value={googleCustomerId}
+                        onChange={(e) => setGoogleCustomerId(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Sem hífens (ex: 1234567890)
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="google-developer-token">Developer Token</Label>
+                      <Input
+                        id="google-developer-token"
+                        type="password"
+                        placeholder="xxxxx"
+                        value={googleDeveloperToken}
+                        onChange={(e) => setGoogleDeveloperToken(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Configure OAuth 2.0 no Google Cloud Console e obtenha o Developer Token no Google Ads API Center
+                  </p>
                   <Button type="submit" disabled={createIntegration.isPending}>
                     {createIntegration.isPending ? "Conectando..." : "Conectar Google Ads"}
                   </Button>
@@ -319,7 +353,7 @@ export default function Settings() {
                     Conecte sua conta do TikTok Ads Manager para sincronizar campanhas
                   </CardDescription>
                 </div>
-                {getIntegration('tiktok') && (
+                {getIntegration('tiktok_ads') && (
                   <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Conectado
@@ -328,14 +362,14 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('tiktok') ? (
+              {getIntegration('tiktok_ads') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('tiktok')!.id)}
+                    onClick={() => setIntegrationToDelete(getIntegration('tiktok_ads')!.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Desconectar
