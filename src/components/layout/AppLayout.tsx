@@ -30,16 +30,25 @@ export function AppLayout() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 md:gap-3">
-                <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
-                  <Bell className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full text-xs flex items-center justify-center text-white">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative h-10 w-10 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105"
+                >
+                  <Bell className="w-5 h-5 text-muted-foreground" />
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full text-[10px] font-medium flex items-center justify-center text-primary-foreground shadow-md animate-pulse">
                     3
                   </span>
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9 md:h-10 md:w-10">
-                  <User className="w-4 h-4 md:w-5 md:h-5" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={signOut} 
+                  className="h-10 w-10 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105"
+                >
+                  <User className="w-5 h-5 text-muted-foreground" />
                 </Button>
               </div>
             </div>
