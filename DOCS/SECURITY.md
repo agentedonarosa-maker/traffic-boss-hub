@@ -1,6 +1,82 @@
 # 🔒 Guia de Segurança - TrafficPro
 
-## ✅ Fase 1: Correção de Segurança Implementada
+## ✅ Atualizações Críticas de Segurança (2025-01-06)
+
+### 🛡️ Correções Implementadas Hoje
+
+#### 1. Sistema de Notificações Reforçado ✅
+**Problema:** Policy RLS permitia service role inserir notificações sem validação adequada.
+
+**Solução:**
+- ✅ Criada função `create_notification_secure()` com validação completa
+- ✅ Validação de existência do usuário antes de criar notificação
+- ✅ Validação de tipos permitidos: `info`, `success`, `warning`, `error`, `sync`
+- ✅ Validação de tamanho: título (200 chars) e mensagem (1000 chars)
+- ✅ Removida policy permissiva anterior
+- ✅ Adicionada coluna `source` para rastreamento de auditoria
+- ✅ Índice de performance otimizado para queries
+
+**Como usar:**
+```sql
+-- Edge Functions devem usar a função segura
+SELECT create_notification_secure(
+  'user-uuid'::uuid,
+  'Título',
+  'Mensagem',
+  'info'
+);
+```
+
+#### 2. Proteção Obrigatória de Credenciais via Vault ✅
+**Problema:** Possibilidade de armazenar credenciais em plaintext na coluna `credentials`.
+
+**Solução:**
+- ✅ Trigger `enforce_vault_credentials()` bloqueia credenciais em plaintext
+- ✅ Sistema exige obrigatoriamente uso de `vault_secret_name`
+- ✅ Validação automática em INSERT e UPDATE
+- ✅ Mensagens de erro descritivas para desenvolvedores
+
+**Comportamento:**
+```sql
+-- ❌ BLOQUEADO: Inserir credenciais sem vault
+INSERT INTO integrations (credentials) 
+VALUES ('{"token": "abc123"}'::jsonb);
+-- Erro: "Security violation: Credentials must be stored in Vault"
+
+-- ✅ PERMITIDO: Usar vault
+INSERT INTO integrations (vault_secret_name) 
+VALUES ('integration_123_credentials');
+```
+
+#### 3. Validação Forte de Autenticação ✅
+**Problema:** Validação HTML5 básica permitia senhas fracas e não sanitizava inputs.
+
+**Solução:**
+- ✅ Schema Zod com requisitos rigorosos de senha:
+  - Mínimo 8 caracteres (anteriormente 6)
+  - Pelo menos uma letra maiúscula
+  - Pelo menos uma letra minúscula
+  - Pelo menos um número
+  - Pelo menos um caractere especial
+- ✅ Validação client-side antes de submit
+- ✅ Feedback visual com alertas inline para cada erro
+- ✅ Sanitização automática de email (trim + lowercase)
+- ✅ Verificação de confirmação de senha
+
+**Exemplo de validação:**
+```typescript
+// src/lib/validations/auth.ts
+export const passwordSchema = z.string()
+  .min(8, "Senha deve ter no mínimo 8 caracteres")
+  .regex(/[a-z]/, "Senha deve conter pelo menos uma letra minúscula")
+  .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiúscula")
+  .regex(/[0-9]/, "Senha deve conter pelo menos um número")
+  .regex(/[^a-zA-Z0-9]/, "Senha deve conter pelo menos um caractere especial");
+```
+
+---
+
+## ✅ Fase 1: Correção de Segurança Implementada (Anteriormente)
 
 ### 1. Correção de RLS - Client Access
 
@@ -192,6 +268,8 @@ console.log('Integration created:', {
 
 ### 🔧 Ação Necessária (Executar AGORA)
 
+> **⚠️ IMPORTANTE:** Com as novas proteções implementadas hoje (2025-01-06), **credenciais antigas em plaintext ainda podem existir no banco**. Execute a migração abaixo para protegê-las.
+
 #### 1. Migrar Credenciais Existentes para o Vault
 
 **Execute esta edge function uma única vez** para migrar todas as integrações existentes:
@@ -276,5 +354,21 @@ Para questões de segurança, contate:
 
 ---
 
-**Última atualização:** 2025-10-06
-**Versão:** 1.0
+---
+
+## 🎯 Resumo das Melhorias de Segurança
+
+### Implementado Hoje (2025-01-06)
+1. ✅ **Notificações validadas** - Função security definer com validação completa
+2. ✅ **Vault obrigatório** - Trigger bloqueia credenciais em plaintext
+3. ✅ **Senhas fortes** - Validação Zod com requisitos rigorosos
+
+### Próximos Passos
+1. ⚠️ **Migrar credenciais existentes** usando edge function
+2. ⚠️ **Ativar Leaked Password Protection** no dashboard
+3. 💡 Considerar 2FA para usuários admin
+
+---
+
+**Última atualização:** 2025-01-06
+**Versão:** 2.0 (Atualização Crítica de Segurança)

@@ -6,11 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, AlertCircle } from 'lucide-react';
+import { signInSchema, signUpSchema } from '@/lib/validations/auth';
+import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Redirect if already authenticated
   if (user) {
@@ -19,11 +23,27 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setValidationErrors({});
     setIsLoading(true);
     
     const formData = new FormData(e.currentTarget);
     const email = formData.get('signin-email') as string;
     const password = formData.get('signin-password') as string;
+    
+    // Validate input
+    const validation = signInSchema.safeParse({ email, password });
+    
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      setIsLoading(false);
+      return;
+    }
     
     await signIn(email, password);
     setIsLoading(false);
@@ -31,6 +51,7 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setValidationErrors({});
     setIsLoading(true);
     
     const formData = new FormData(e.currentTarget);
@@ -38,8 +59,24 @@ export default function Auth() {
     const password = formData.get('signup-password') as string;
     const confirmPassword = formData.get('confirm-password') as string;
     
-    if (password !== confirmPassword) {
+    // Validate input
+    const validation = signUpSchema.safeParse({ email, password, confirmPassword });
+    
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
       setIsLoading(false);
+      
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, corrija os erros no formulário.",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -88,6 +125,14 @@ export default function Auth() {
                       required
                       className="bg-background"
                     />
+                    {validationErrors.email && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {validationErrors.email}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Senha</Label>
@@ -99,6 +144,14 @@ export default function Auth() {
                       required
                       className="bg-background"
                     />
+                    {validationErrors.password && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {validationErrors.password}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                   <Button 
                     type="submit" 
@@ -122,6 +175,14 @@ export default function Auth() {
                       required
                       className="bg-background"
                     />
+                    {validationErrors.email && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {validationErrors.email}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
@@ -129,11 +190,21 @@ export default function Auth() {
                       id="signup-password"
                       name="signup-password"
                       type="password"
-                      placeholder="Crie uma senha"
+                      placeholder="Crie uma senha forte"
                       required
-                      minLength={6}
                       className="bg-background"
                     />
+                    {validationErrors.password && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {validationErrors.password}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirmar Senha</Label>
@@ -143,9 +214,16 @@ export default function Auth() {
                       type="password"
                       placeholder="Confirme sua senha"
                       required
-                      minLength={6}
                       className="bg-background"
                     />
+                    {validationErrors.confirmPassword && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {validationErrors.confirmPassword}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                   <Button 
                     type="submit" 

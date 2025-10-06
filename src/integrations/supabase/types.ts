@@ -304,6 +304,7 @@ export type Database = {
           id: string
           message: string
           read: boolean
+          source: string | null
           title: string
           type: string
           updated_at: string
@@ -314,6 +315,7 @@ export type Database = {
           id?: string
           message: string
           read?: boolean
+          source?: string | null
           title: string
           type?: string
           updated_at?: string
@@ -324,6 +326,7 @@ export type Database = {
           id?: string
           message?: string
           read?: boolean
+          source?: string | null
           title?: string
           type?: string
           updated_at?: string
@@ -393,6 +396,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification_secure: {
+        Args: {
+          p_message: string
+          p_title: string
+          p_type?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       generate_client_token: {
         Args: Record<PropertyKey, never>
         Returns: string
