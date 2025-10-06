@@ -183,19 +183,51 @@ console.log('Integration created:', {
 - [x] **Criptografia com Supabase Vault implementada**
   - Credenciais de integrações armazenadas de forma criptografada
   - Edge function `manage-integration-credentials` para gerenciar secrets
+  - Edge function `migrate-credentials-to-vault` para migrar integrações existentes
   - Máscara automática de dados sensíveis em logs
   - Campos `user_id` e `client_id` obrigatórios em `integrations`
   - Foreign key constraint para integridade referencial
+  - Trigger de prevenção contra credenciais em plaintext
+  - Coluna `credentials` marcada como DEPRECATED
 
-### ⚠️ Ação Necessária (Usuário)
-- [ ] Ativar "Leaked Password Protection" no Supabase Dashboard
-- [ ] **Migrar credenciais existentes**: Execute a query SQL abaixo para migrar integrações existentes para o Vault:
+### 🔧 Ação Necessária (Executar AGORA)
 
-```sql
--- Esta query será executada automaticamente pela aplicação na próxima sincronização
--- Ou pode ser executada manualmente no SQL Editor do Supabase
-SELECT id, platform FROM integrations WHERE vault_secret_name IS NULL;
+#### 1. Migrar Credenciais Existentes para o Vault
+
+**Execute esta edge function uma única vez** para migrar todas as integrações existentes:
+
+```bash
+# Via Supabase CLI (recomendado)
+curl -X POST 'https://bdkdcwfmevyvzxjvmxgt.supabase.co/functions/v1/migrate-credentials-to-vault' \
+  -H "Authorization: Bearer SEU_ANON_KEY"
 ```
+
+Ou acesse diretamente pelo dashboard:
+👉 [Executar migração de credenciais](https://supabase.com/dashboard/project/bdkdcwfmevyvzxjvmxgt/functions/migrate-credentials-to-vault/details)
+
+**Importante:** Esta migração é **idempotente** - pode ser executada múltiplas vezes sem problemas.
+
+#### 2. Verificar Migração
+
+Após executar, verifique se todas foram migradas:
+```sql
+-- Execute no SQL Editor
+SELECT 
+  id,
+  platform,
+  vault_secret_name,
+  CASE 
+    WHEN vault_secret_name IS NOT NULL THEN '✅ Migrado'
+    ELSE '❌ Pendente'
+  END as status
+FROM integrations;
+```
+
+### ⚠️ Ação Necessária (Configuração Manual)
+- [ ] Ativar "Leaked Password Protection" no Supabase Dashboard
+  - Acesse: https://supabase.com/dashboard/project/bdkdcwfmevyvzxjvmxgt/auth/policies
+  - Ative "Check passwords against leaked password database"
+  - Nível recomendado: "Medium" ou "High"
 
 ### ℹ️ Avisos Informativos (Não Críticos)
 - **Extension in Public Schema**: As extensões `pg_cron` e `pg_net` foram instaladas no schema público para funcionalidade de cronjobs. Isso é um aviso informativo, não representa risco de segurança significativo.
