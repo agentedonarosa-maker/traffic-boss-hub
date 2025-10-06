@@ -1,1 +1,7 @@
 project_id = "bdkdcwfmevyvzxjvmxgt"
+
+[functions.validate-client-token]
+verify_jwt = false
+
+[functions.send-contract]
+verify_jwt = false

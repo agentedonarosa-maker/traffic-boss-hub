@@ -84,72 +84,15 @@ export const useClientPortalData = (token: string) => {
   return useQuery({
     queryKey: ["client_portal", token],
     queryFn: async () => {
-      // Buscar acesso do cliente pelo token
-      const { data: access, error: accessError } = await supabase
-        .from("client_access")
-        .select(`
-          *,
-          client:clients(*)
-        `)
-        .eq("access_token", token)
-        .eq("is_active", true)
-        .single();
+      // Usar edge function segura para validar token (não expõe tokens via RLS)
+      const { data, error } = await supabase.functions.invoke("validate-client-token", {
+        body: { token },
+      });
 
-      if (accessError) throw accessError;
+      if (error) throw error;
+      if (!data) throw new Error("Dados não encontrados");
 
-      const clientId = access.client_id;
-
-      // Buscar reuniões do cliente
-      const { data: meetings, error: meetingsError } = await supabase
-        .from("meetings")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("meeting_date", { ascending: true });
-
-      if (meetingsError) throw meetingsError;
-
-      // Buscar campanhas do cliente
-      const { data: campaigns, error: campaignsError } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("client_id", clientId);
-
-      if (campaignsError) throw campaignsError;
-
-      const campaignIds = campaigns?.map(c => c.id) || [];
-
-      // Buscar métricas das campanhas
-      const { data: metrics, error: metricsError } = await supabase
-        .from("campaign_metrics")
-        .select("*")
-        .in("campaign_id", campaignIds)
-        .order("date", { ascending: false })
-        .limit(30);
-
-      if (metricsError) throw metricsError;
-
-      // Buscar tarefas do cliente
-      const { data: tasks, error: tasksError } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("due_date", { ascending: true });
-
-      if (tasksError) throw tasksError;
-
-      // Atualizar last_accessed_at
-      await supabase
-        .from("client_access")
-        .update({ last_accessed_at: new Date().toISOString() })
-        .eq("access_token", token);
-
-      return {
-        client: access.client,
-        meetings,
-        campaigns,
-        metrics,
-        tasks,
-      };
+      return data;
     },
     enabled: !!token,
   });
