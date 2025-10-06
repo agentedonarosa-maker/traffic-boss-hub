@@ -5,3 +5,15 @@ verify_jwt = false
 
 [functions.send-contract]
 verify_jwt = false
+
+[functions.sync-meta-ads]
+verify_jwt = false
+
+[functions.sync-google-ads]
+verify_jwt = false
+
+[functions.sync-tiktok-ads]
+verify_jwt = false
+
+[functions.sync-all-integrations]
+verify_jwt = false
