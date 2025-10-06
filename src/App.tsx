@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import ClientPortal from "./pages/ClientPortal";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/client-portal/:token" element={<ClientPortal />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <AppLayout />
