@@ -1,0 +1,76 @@
+# =====================================================
+# TrafficPro - Caddyfile Configuration
+# SPA serving with fallback + security headers
+# =====================================================
+
+:80 {
+	# Enable compression
+	encode gzip zstd
+
+	# Serve static files from dist directory
+	root * /srv/dist
+	file_server
+
+	# Cache static assets
+	@static {
+		path *.js *.css *.woff *.woff2 *.ttf *.eot *.svg *.png *.jpg *.jpeg *.gif *.ico *.webp
+	}
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	# SPA fallback: serve index.html for non-existent files
+	@notFound {
+		not file
+		not path /api/*
+	}
+	rewrite @notFound /index.html
+
+	# Security headers
+	header {
+		# HSTS (HTTP Strict Transport Security)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		
+		# Prevent MIME type sniffing
+		X-Content-Type-Options "nosniff"
+		
+		# Prevent clickjacking
+		X-Frame-Options "SAMEORIGIN"
+		
+		# XSS protection (legacy, but doesn't hurt)
+		X-XSS-Protection "1; mode=block"
+		
+		# Referrer policy
+		Referrer-Policy "strict-origin-when-cross-origin"
+		
+		# Cross-origin policies
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		
+		# Remove server header
+		-Server
+	}
+
+	# Disable directory listing
+	file_server {
+		hide .git
+	}
+
+	# =====================================================
+	# EXEMPLO: Proxy para backend externo (comentado)
+	# =====================================================
+	# Se você tiver um backend separado, descomente e ajuste:
+	#
+	# @api path /api/*
+	# reverse_proxy @api http://backend-interno:3000 {
+	#   header_up Host {host}
+	#   header_up X-Real-IP {remote_host}
+	#   header_up X-Forwarded-For {remote_host}
+	#   header_up X-Forwarded-Proto {scheme}
+	# }
+
+	# Logging (opcional - descomente para debug)
+	# log {
+	#   output stdout
+	#   format console
+	#   level INFO
+	# }
+}

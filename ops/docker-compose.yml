@@ -1,0 +1,57 @@
+# =====================================================
+# TrafficPro - Docker Compose
+# Production deployment configuration
+# =====================================================
+
+services:
+  traffic-boss-web:
+    build:
+      context: ..
+      dockerfile: ops/Dockerfile
+    container_name: traffic-boss-web
+    
+    # Load environment variables from .env file
+    env_file:
+      - ../.env
+    
+    # Port mapping: host:container
+    ports:
+      - "8080:80"
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits (opcional - ajuste conforme necessário)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    
+    # Labels for organization
+    labels:
+      - "com.trafficpro.app=web"
+      - "com.trafficpro.environment=production"
+
+# =====================================================
+# EXEMPLO: Rede customizada (opcional)
+# =====================================================
+# Se precisar conectar com outros serviços:
+# networks:
+#   trafficpro-net:
+#     driver: bridge
+#
+# Então adicione em services.traffic-boss-web:
+# networks:
+#   - trafficpro-net
