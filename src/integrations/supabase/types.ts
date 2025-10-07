@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_insights: {
+        Row: {
+          ad_id: string
+          ad_name: string | null
+          age_range: string | null
+          campaign_id: string
+          clicks: number | null
+          conversion_value: number | null
+          conversions: number | null
+          country: string | null
+          cpa: number | null
+          cpc: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          day_of_week: number | null
+          device_type: string | null
+          gender: string | null
+          hour_of_day: number | null
+          id: string
+          impressions: number | null
+          placement: string | null
+          publisher_platform: string | null
+          region: string | null
+          roas: number | null
+          spend: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          ad_name?: string | null
+          age_range?: string | null
+          campaign_id: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          country?: string | null
+          cpa?: number | null
+          cpc?: number | null
+          created_at?: string
+          ctr?: number | null
+          date: string
+          day_of_week?: number | null
+          device_type?: string | null
+          gender?: string | null
+          hour_of_day?: number | null
+          id?: string
+          impressions?: number | null
+          placement?: string | null
+          publisher_platform?: string | null
+          region?: string | null
+          roas?: number | null
+          spend?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          ad_name?: string | null
+          age_range?: string | null
+          campaign_id?: string
+          clicks?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          country?: string | null
+          cpa?: number | null
+          cpc?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          day_of_week?: number | null
+          device_type?: string | null
+          gender?: string | null
+          hour_of_day?: number | null
+          id?: string
+          impressions?: number | null
+          placement?: string | null
+          publisher_platform?: string | null
+          region?: string | null
+          roas?: number | null
+          spend?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_insights_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_metrics: {
         Row: {
           campaign_id: string

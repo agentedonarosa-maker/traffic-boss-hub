@@ -13,6 +13,7 @@ import Reports from "./pages/Reports";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
+import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import ClientPortal from "./pages/ClientPortal";
 import Terms from "./pages/Terms";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="reports" element={<Reports />} />
               <Route path="calendar" element={<Calendar />} />
+              <Route path="analytics" element={<Analytics />} />
               <Route path="onboarding" element={<Onboarding />} />
               <Route path="settings" element={<Settings />} />
             </Route>
