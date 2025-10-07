@@ -226,94 +226,136 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Sincronizar métricas das campanhas importadas
+    // Buscar TODAS as campanhas ativas do Meta Ads deste cliente no banco
+    console.log('Buscando todas as campanhas do Meta Ads deste cliente para sincronização...');
+    const { data: allMetaCampaigns, error: fetchCampaignsError } = await supabaseAdmin
+      .from('campaigns')
+      .select('id, name, platform')
+      .eq('client_id', client_id)
+      .eq('platform', 'Meta Ads')
+      .eq('status', 'active');
+
+    if (fetchCampaignsError) {
+      console.error('Erro ao buscar campanhas:', fetchCampaignsError);
+    }
+
     let metricsSynced = 0;
-    if (importedCampaignIds.length > 0) {
-      console.log(`Sincronizando métricas para ${importedCampaignIds.length} campanhas...`);
+
+    if (allMetaCampaigns && allMetaCampaigns.length > 0) {
+      console.log(`Sincronizando métricas de ${allMetaCampaigns.length} campanhas ativas...`);
       
-      // Definir período dos últimos 7 dias
+      // Criar mapa de nome para ID do banco
+      const dbCampaignsMap = new Map(
+        allMetaCampaigns.map((c: any) => [c.name, c.id])
+      );
+      
+      // Definir intervalo de datas (últimos 7 dias)
       const today = new Date();
       const sevenDaysAgo = new Date(today);
       sevenDaysAgo.setDate(today.getDate() - 7);
       const dateStart = sevenDaysAgo.toISOString().split('T')[0];
       const dateEnd = today.toISOString().split('T')[0];
-
-      // Buscar métricas da conta de anúncios
-      const metricsUrl = `https://graph.facebook.com/v18.0/${adAccountId}/insights`;
-      const params = new URLSearchParams({
-        access_token: credentials.access_token,
-        time_range: JSON.stringify({ since: dateStart, until: dateEnd }),
-        time_increment: "1",
-        level: "account",
-        fields: "impressions,clicks,spend,actions,action_values",
-      });
-
-      try {
-        const metricsResponse = await fetch(`${metricsUrl}?${params.toString()}`);
+      
+      // Para cada campanha do Meta Ads, buscar métricas individuais
+      for (const metaCampaign of activeCampaigns) {
+        const dbCampaignId = dbCampaignsMap.get(metaCampaign.name);
         
-        if (metricsResponse.ok) {
-          const metricsData = await metricsResponse.json();
+        if (!dbCampaignId) {
+          console.log(`Campanha "${metaCampaign.name}" não encontrada no banco, pulando métricas...`);
+          continue;
+        }
+        
+        try {
+          // Buscar métricas específicas desta campanha do Meta Ads
+          const campaignInsightsUrl = `https://graph.facebook.com/v18.0/${metaCampaign.id}/insights`;
+          const metricsParams = new URLSearchParams({
+            access_token: credentials.access_token,
+            time_range: JSON.stringify({ since: dateStart, until: dateEnd }),
+            time_increment: "1",
+            fields: "impressions,clicks,spend,actions,action_values",
+          });
           
-          if (metricsData.data && metricsData.data.length > 0) {
-            for (const insight of metricsData.data) {
-              // Extrair leads e sales
+          const insightsResponse = await fetch(`${campaignInsightsUrl}?${metricsParams.toString()}`);
+          
+          if (!insightsResponse.ok) {
+            console.error(`Erro ao buscar métricas da campanha ${metaCampaign.name}`);
+            continue;
+          }
+          
+          const insightsData = await insightsResponse.json();
+          
+          if (insightsData.data && insightsData.data.length > 0) {
+            // Processar cada dia de métricas
+            for (const dayMetrics of insightsData.data) {
+              const impressions = parseInt(dayMetrics.impressions || '0');
+              const clicks = parseInt(dayMetrics.clicks || '0');
+              const spend = parseFloat(dayMetrics.spend || '0');
+              
+              // Extrair leads e vendas das ações
               let leads = 0;
               let sales = 0;
               let revenue = 0;
-
-              if (insight.actions) {
-                const leadAction = insight.actions.find((a: any) => a.action_type === "lead");
-                const purchaseAction = insight.actions.find((a: any) => a.action_type === "purchase");
-                leads = leadAction ? parseInt(leadAction.value) : 0;
-                sales = purchaseAction ? parseInt(purchaseAction.value) : 0;
-              }
-
-              if (insight.action_values) {
-                const purchaseValue = insight.action_values.find((a: any) => a.action_type === "purchase");
-                revenue = purchaseValue ? parseFloat(purchaseValue.value) : 0;
-              }
-
-              const impressions = parseInt(insight.impressions || "0");
-              const clicks = parseInt(insight.clicks || "0");
-              const investment = parseFloat(insight.spend || "0");
-              const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-              const cpl = leads > 0 ? investment / leads : 0;
-              const roas = investment > 0 ? revenue / investment : 0;
-
-              // Salvar métrica para cada campanha importada
-              for (const campaignId of importedCampaignIds) {
-                const { error: metricError } = await supabaseAdmin
-                  .from("campaign_metrics")
-                  .upsert({
-                    campaign_id: campaignId,
-                    user_id: integration.user_id,
-                    date: insight.date_start,
-                    impressions,
-                    clicks,
-                    investment,
-                    leads,
-                    sales,
-                    revenue,
-                    ctr,
-                    cpl,
-                    roas,
-                  }, {
-                    onConflict: "campaign_id,date",
-                  });
-
-                if (!metricError) {
-                  metricsSynced++;
+              
+              if (dayMetrics.actions) {
+                for (const action of dayMetrics.actions) {
+                  if (action.action_type === 'lead') {
+                    leads = parseInt(action.value || '0');
+                  } else if (action.action_type === 'purchase' || action.action_type === 'omni_purchase') {
+                    sales = parseInt(action.value || '0');
+                  }
                 }
               }
+              
+              // Extrair receita
+              if (dayMetrics.action_values) {
+                for (const actionValue of dayMetrics.action_values) {
+                  if (actionValue.action_type === 'purchase' || actionValue.action_type === 'omni_purchase') {
+                    revenue = parseFloat(actionValue.value || '0');
+                  }
+                }
+              }
+              
+              // Calcular métricas derivadas
+              const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+              const cpl = leads > 0 ? spend / leads : 0;
+              const roas = spend > 0 ? revenue / spend : 0;
+              
+              // Inserir ou atualizar métricas
+              const { error: metricsError } = await supabaseAdmin
+                .from('campaign_metrics')
+                .upsert({
+                  campaign_id: dbCampaignId,
+                  user_id: integration.user_id,
+                  date: dayMetrics.date_start,
+                  impressions,
+                  clicks,
+                  investment: spend,
+                  leads,
+                  sales,
+                  revenue,
+                  ctr: parseFloat(ctr.toFixed(2)),
+                  cpl: parseFloat(cpl.toFixed(2)),
+                  roas: parseFloat(roas.toFixed(2)),
+                }, {
+                  onConflict: 'campaign_id,date'
+                });
+              
+              if (!metricsError) {
+                metricsSynced++;
+              } else {
+                console.error(`Erro ao salvar métrica da campanha ${metaCampaign.name}:`, metricsError);
+              }
             }
-            console.log(`${metricsSynced} métricas sincronizadas`);
+            
+            console.log(`Métricas da campanha "${metaCampaign.name}" sincronizadas`);
           }
-        } else {
-          console.error("Erro ao buscar métricas:", await metricsResponse.text());
+        } catch (error) {
+          console.error(`Erro ao processar métricas da campanha ${metaCampaign.name}:`, error);
+          continue;
         }
-      } catch (error) {
-        console.error("Erro ao sincronizar métricas:", error);
       }
+      
+      console.log(`Total de ${metricsSynced} métricas sincronizadas`);
     }
 
     // Criar notificação para o usuário
