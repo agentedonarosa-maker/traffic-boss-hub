@@ -13,28 +13,18 @@ export const useUpdateIntegration = () => {
 
   return useMutation({
     mutationFn: async ({ id, credentials, ...data }: UpdateIntegrationData) => {
-      // Se houver credenciais para atualizar, usar Vault
+      // Preparar dados para atualização
+      const updateData: any = { ...data };
+      
+      // Se houver credenciais, incluí-las na atualização
       if (credentials) {
-        const { error: vaultError } = await supabase.functions.invoke(
-          "manage-integration-credentials",
-          {
-            body: {
-              action: "store",
-              integrationId: id,
-              credentials,
-            },
-          }
-        );
-
-        if (vaultError) {
-          throw new Error("Falha ao atualizar credenciais de forma segura");
-        }
+        updateData.credentials = credentials;
       }
 
-      // Atualizar outros campos da integração
+      // Atualizar a integração
       const { data: integration, error } = await supabase
         .from("integrations")
-        .update(data)
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
