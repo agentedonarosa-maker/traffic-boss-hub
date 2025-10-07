@@ -5,7 +5,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface CreateIntegrationData {
   client_id: string;
-  platform: 'meta_ads' | 'google_ads' | 'tiktok_ads';
+  platform: 'meta' | 'google' | 'tiktok';
   credentials: {
     access_token?: string;
     refresh_token?: string;

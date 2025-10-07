@@ -47,7 +47,7 @@ export default function Settings() {
     
     createIntegration.mutate({
       client_id: selectedClientId,
-      platform: 'meta_ads',
+      platform: 'meta',
       credentials: {
         access_token: metaAccessToken,
         ad_account_id: metaAccountId,
@@ -66,7 +66,7 @@ export default function Settings() {
     
     createIntegration.mutate({
       client_id: selectedClientId,
-      platform: 'google_ads',
+      platform: 'google',
       credentials: {
         client_id: googleClientId,
         client_secret: googleClientSecret,
@@ -91,7 +91,7 @@ export default function Settings() {
     
     createIntegration.mutate({
       client_id: selectedClientId,
-      platform: 'tiktok_ads',
+      platform: 'tiktok',
       credentials: {
         access_token: tiktokAccessToken,
         advertiser_id: tiktokAdvertiserId,
@@ -151,19 +151,19 @@ export default function Settings() {
             <Plug className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Meta Ads</span>
             <span className="sm:hidden">Meta</span>
-            {getIntegration('meta_ads') && <CheckCircle2 className="w-3 h-3 text-success" />}
+            {getIntegration('meta') && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
           <TabsTrigger value="google" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
             <Plug className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Google Ads</span>
             <span className="sm:hidden">Google</span>
-            {getIntegration('google_ads') && <CheckCircle2 className="w-3 h-3 text-success" />}
+            {getIntegration('google') && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
           <TabsTrigger value="tiktok" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
             <Plug className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">TikTok Ads</span>
             <span className="sm:hidden">TikTok</span>
-            {getIntegration('tiktok_ads') && <CheckCircle2 className="w-3 h-3 text-success" />}
+            {getIntegration('tiktok') && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
         </TabsList>
 
@@ -178,7 +178,7 @@ export default function Settings() {
                     Conecte sua conta do Meta Business Manager para sincronizar campanhas
                   </CardDescription>
                 </div>
-                {getIntegration('meta_ads') && (
+                {getIntegration('meta') && (
                   <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Conectado
@@ -187,14 +187,14 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('meta_ads') ? (
+              {getIntegration('meta') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('meta_ads')!.id)}
+                    onClick={() => setIntegrationToDelete(getIntegration('meta')!.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Desconectar
@@ -246,7 +246,7 @@ export default function Settings() {
                     Conecte sua conta do Google Ads para sincronizar campanhas
                   </CardDescription>
                 </div>
-                {getIntegration('google_ads') && (
+                {getIntegration('google') && (
                   <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Conectado
@@ -255,14 +255,14 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('google_ads') ? (
+              {getIntegration('google') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('google_ads')!.id)}
+                    onClick={() => setIntegrationToDelete(getIntegration('google')!.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Desconectar
@@ -353,7 +353,7 @@ export default function Settings() {
                     Conecte sua conta do TikTok Ads Manager para sincronizar campanhas
                   </CardDescription>
                 </div>
-                {getIntegration('tiktok_ads') && (
+                {getIntegration('tiktok') && (
                   <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Conectado
@@ -362,14 +362,14 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('tiktok_ads') ? (
+              {getIntegration('tiktok') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
                   <Button 
                     variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('tiktok_ads')!.id)}
+                    onClick={() => setIntegrationToDelete(getIntegration('tiktok')!.id)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Desconectar
