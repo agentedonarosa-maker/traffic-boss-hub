@@ -6,6 +6,7 @@ interface ImportResult {
   imported: number;
   skipped: number;
   total: number;
+  metricsSynced?: number;
   errors?: Array<{ campaign: string; error: string }>;
 }
 
@@ -26,11 +27,17 @@ export const useImportMetaCampaigns = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaign_metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_metrics"] });
       
       if (data.imported > 0) {
+        const metricsInfo = data.metricsSynced 
+          ? ` e ${data.metricsSynced} métricas sincronizadas` 
+          : "";
+        
         toast({
           title: "Campanhas importadas",
-          description: `${data.imported} campanha(s) do Meta Ads foram importadas com sucesso${
+          description: `${data.imported} campanha(s) importadas${metricsInfo}${
             data.skipped > 0 ? ` (${data.skipped} já existiam)` : ""
           }`,
         });
