@@ -15,8 +15,8 @@ export default function Analytics() {
   const { data: clients, isLoading: loadingClients } = useClients();
   const { data: campaigns, isLoading: loadingCampaigns } = useCampaigns();
   
-  const [selectedClient, setSelectedClient] = useState<string>("");
-  const [selectedCampaign, setSelectedCampaign] = useState<string>("");
+  const [selectedClient, setSelectedClient] = useState<string>("all");
+  const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("7");
 
   const today = new Date();
@@ -24,12 +24,12 @@ export default function Analytics() {
   startDate.setDate(today.getDate() - parseInt(dateRange));
 
   const { data: insights, isLoading: loadingInsights } = useAdInsights({
-    campaignId: selectedCampaign || undefined,
+    campaignId: selectedCampaign !== "all" ? selectedCampaign : undefined,
     startDate: startDate.toISOString().split('T')[0],
     endDate: today.toISOString().split('T')[0],
   });
 
-  const filteredCampaigns = campaigns?.filter(c => !selectedClient || c.client_id === selectedClient);
+  const filteredCampaigns = campaigns?.filter(c => selectedClient === "all" || c.client_id === selectedClient);
 
   // Agregações por faixa etária
   const ageData = insights?.reduce((acc: any[], insight) => {
@@ -177,7 +177,7 @@ export default function Analytics() {
                   <SelectValue placeholder="Todos os clientes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os clientes</SelectItem>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
                   {clients?.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -194,7 +194,7 @@ export default function Analytics() {
                   <SelectValue placeholder="Todas as campanhas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as campanhas</SelectItem>
+                  <SelectItem value="all">Todas as campanhas</SelectItem>
                   {filteredCampaigns?.map((campaign) => (
                     <SelectItem key={campaign.id} value={campaign.id}>
                       {campaign.name}
@@ -223,8 +223,8 @@ export default function Analytics() {
             <div className="flex items-end">
               <Button 
                 onClick={() => {
-                  setSelectedClient("");
-                  setSelectedCampaign("");
+                  setSelectedClient("all");
+                  setSelectedCampaign("all");
                   setDateRange("7");
                 }}
                 variant="outline"
