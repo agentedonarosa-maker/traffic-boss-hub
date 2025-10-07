@@ -6,8 +6,11 @@ import { useClients } from "@/hooks/useClients";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useAdInsights } from "@/hooks/useAdInsights";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { BarChart3, Users, Smartphone, Clock, MapPin, TrendingUp } from "lucide-react";
+import { BarChart3, Users, Smartphone, Clock, MapPin, TrendingUp, Eye, MousePointer, ShoppingCart, DollarSign, FileDown, Lightbulb, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { generateReportPDF } from "@/lib/pdfExport";
+import { toast } from "@/hooks/use-toast";
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
@@ -30,6 +33,15 @@ export default function Analytics() {
   });
 
   const filteredCampaigns = campaigns?.filter(c => selectedClient === "all" || c.client_id === selectedClient);
+
+  // Calcular métricas de resumo
+  const totalImpressions = insights?.reduce((sum, i) => sum + i.impressions, 0) || 0;
+  const totalClicks = insights?.reduce((sum, i) => sum + i.clicks, 0) || 0;
+  const totalConversions = insights?.reduce((sum, i) => sum + i.conversions, 0) || 0;
+  const totalSpend = insights?.reduce((sum, i) => sum + i.spend, 0) || 0;
+  const totalRevenue = insights?.reduce((sum, i) => sum + i.conversion_value, 0) || 0;
+  const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
 
   // Agregações por faixa etária
   const ageData = insights?.reduce((acc: any[], insight) => {
@@ -149,17 +161,132 @@ export default function Analytics() {
     item.ctr = item.impressions > 0 ? ((item.clicks / item.impressions) * 100).toFixed(2) : 0;
   });
 
+  // Gerar insights automáticos
+  const generateInsights = () => {
+    const insights: string[] = [];
+
+    // Melhor faixa etária
+    const bestAge = ageData.reduce((best: any, current: any) => 
+      (parseFloat(current.roas) > parseFloat(best?.roas || 0)) ? current : best, null);
+    if (bestAge) {
+      insights.push(`Faixa etária ${bestAge.name} apresenta o melhor ROAS (${parseFloat(bestAge.roas).toFixed(1)}x)`);
+    }
+
+    // Melhor horário
+    const bestHour = hourData.reduce((best: any, current: any) => 
+      current.conversions > (best?.conversions || 0) ? current : best, null);
+    if (bestHour) {
+      insights.push(`Horário de pico: ${bestHour.name} com ${bestHour.conversions} conversões`);
+    }
+
+    // Melhor dispositivo
+    const bestDevice = deviceData.reduce((best: any, current: any) => 
+      (parseFloat(current.roas) > parseFloat(best?.roas || 0)) ? current : best, null);
+    if (bestDevice) {
+      insights.push(`${bestDevice.name} gera ROAS ${parseFloat(bestDevice.roas).toFixed(1)}x superior`);
+    }
+
+    // Melhor plataforma por conversões
+    const bestPlatform = platformData.reduce((best: any, current: any) => 
+      current.conversions > (best?.conversions || 0) ? current : best, null);
+    if (bestPlatform && platformData.length > 1) {
+      const total = platformData.reduce((sum: number, p: any) => sum + p.conversions, 0);
+      const percentage = ((bestPlatform.conversions / total) * 100).toFixed(0);
+      insights.push(`${bestPlatform.name} gera ${percentage}% das conversões`);
+    }
+
+    return insights;
+  };
+
+  const autoInsights = generateInsights();
+
+  // Função para exportar relatório
+  const handleExportPDF = () => {
+    try {
+      const selectedCampaignData = campaigns?.find(c => c.id === selectedCampaign);
+      const selectedClientData = clients?.find(c => c.id === selectedClient);
+      
+      const reportData = {
+        client: {
+          name: selectedClientData?.name || "Todos os Clientes",
+          company: selectedClientData?.company || null,
+        },
+        period: {
+          start: startDate.toISOString().split('T')[0],
+          end: today.toISOString().split('T')[0],
+        },
+        summary: {
+          totalInvestment: totalSpend,
+          totalRevenue: totalRevenue,
+          totalImpressions: totalImpressions,
+          totalClicks: totalClicks,
+          totalLeads: totalConversions,
+          totalSales: totalConversions,
+          avgRoas: avgRoas,
+          avgCtr: avgCtr,
+          avgCpl: totalConversions > 0 ? totalSpend / totalConversions : 0,
+        },
+        campaigns: selectedCampaignData ? [{
+          id: selectedCampaignData.id,
+          name: selectedCampaignData.name,
+          platform: selectedCampaignData.platform,
+          investment: totalSpend,
+          revenue: totalRevenue,
+          leads: totalConversions,
+          sales: totalConversions,
+          roas: avgRoas,
+          ctr: avgCtr,
+          cpl: totalConversions > 0 ? totalSpend / totalConversions : 0,
+        }] : [],
+      };
+
+      generateReportPDF(reportData);
+      toast({
+        title: "✅ Relatório exportado",
+        description: "O PDF foi gerado com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Erro ao exportar",
+        description: "Ocorreu um erro ao gerar o PDF.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Custom tooltip formatter
+  const formatTooltipValue = (value: any, name: string) => {
+    if (name === "ROAS" || name.toLowerCase().includes("roas")) {
+      return `${parseFloat(value).toFixed(2)}x`;
+    }
+    if (name === "CTR" || name.toLowerCase().includes("ctr")) {
+      return `${parseFloat(value).toFixed(2)}%`;
+    }
+    if (name.toLowerCase().includes("spend") || name.toLowerCase().includes("investment") || name.toLowerCase().includes("revenue")) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+    }
+    return value.toLocaleString("pt-BR");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <BarChart3 className="w-8 h-8 text-primary" />
-          Analytics Avançada
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Análise granular de performance: demografia, dispositivos, horários e plataformas
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <BarChart3 className="w-8 h-8 text-primary" />
+            Analytics Avançada
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Análise granular de performance: demografia, dispositivos, horários e plataformas
+          </p>
+        </div>
+        {insights && insights.length > 0 && (
+          <Button onClick={handleExportPDF} variant="outline" className="gap-2">
+            <FileDown className="w-4 h-4" />
+            Exportar PDF
+          </Button>
+        )}
       </div>
 
       {/* Filtros */}
@@ -238,56 +365,147 @@ export default function Analytics() {
       </Card>
 
       {loadingInsights ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-64 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <>
+          {/* Loading Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-6 w-3/4 mb-4" />
+                <Skeleton className="h-10 w-1/2" />
+              </Card>
+            ))}
+          </div>
+
+          {/* Loading Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-64 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
       ) : !insights || insights.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <BarChart3 className="w-12 h-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-muted-foreground">Nenhum dado disponível</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Importe campanhas do Meta Ads para visualizar analytics granulares
+        <Card className="shadow-card">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="bg-primary/10 p-6 rounded-full mb-6">
+              <BarChart3 className="w-16 h-16 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum dado disponível</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              Importe campanhas do Meta Ads para visualizar análises detalhadas de performance, demografia e comportamento do público.
             </p>
+            <Button onClick={() => window.location.href = "/settings"} className="gap-2">
+              <Target className="w-4 h-4" />
+              Configurar Integrações
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Performance por Faixa Etária */}
-          {ageData.length > 0 && (
-            <Card>
+        <>
+          {/* Summary Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <MetricCard
+              title="Total de Impressões"
+              value={totalImpressions.toLocaleString("pt-BR")}
+              icon={<Eye className="w-5 h-5" />}
+              subtitle={`Últimos ${dateRange} dias`}
+              variant="primary"
+            />
+            <MetricCard
+              title="Conversões"
+              value={totalConversions.toLocaleString("pt-BR")}
+              icon={<ShoppingCart className="w-5 h-5" />}
+              subtitle={`CTR: ${avgCtr.toFixed(2)}%`}
+              variant="success"
+            />
+            <MetricCard
+              title="Investimento"
+              value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalSpend)}
+              icon={<DollarSign className="w-5 h-5" />}
+              subtitle={`${totalClicks.toLocaleString()} cliques`}
+            />
+            <MetricCard
+              title="ROAS Médio"
+              value={`${avgRoas.toFixed(1)}x`}
+              icon={<TrendingUp className="w-5 h-5" />}
+              subtitle={`Receita: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact" }).format(totalRevenue)}`}
+              variant="success"
+            />
+          </div>
+
+          {/* Insights Automáticos */}
+          {autoInsights.length > 0 && (
+            <Card className="shadow-card border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  Performance por Faixa Etária
+                  <Lightbulb className="w-5 h-5 text-primary" />
+                  Principais Descobertas
                 </CardTitle>
-                <CardDescription>Conversões e ROAS por idade</CardDescription>
+                <CardDescription>Insights automáticos baseados nos dados analisados</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {autoInsights.map((insight, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <div className="bg-primary/10 rounded-full p-1 mt-0.5">
+                        <TrendingUp className="w-3 h-3 text-primary" />
+                      </div>
+                      <p className="text-sm text-foreground flex-1">{insight}</p>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Performance por Faixa Etária */}
+          {ageData.length > 0 && (
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      Performance por Faixa Etária
+                    </CardTitle>
+                    <CardDescription>Conversões e ROAS por idade</CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Melhor segmento</p>
+                    <p className="text-lg font-bold text-primary">
+                      {ageData.reduce((best: any, curr: any) => 
+                        parseFloat(curr.roas) > parseFloat(best.roas) ? curr : best
+                      ).name}
+                    </p>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={ageData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} 
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={formatTooltipValue}
                     />
                     <Legend />
-                    <Bar dataKey="conversions" fill="hsl(var(--primary))" name="Conversões" />
-                    <Bar dataKey="roas" fill="hsl(var(--chart-2))" name="ROAS" />
+                    <Bar dataKey="conversions" fill="hsl(var(--primary))" name="Conversões" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="roas" fill="hsl(var(--chart-2))" name="ROAS" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -296,13 +514,23 @@ export default function Analytics() {
 
           {/* Performance por Gênero */}
           {genderData.length > 0 && (
-            <Card>
+            <Card className="shadow-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  Distribuição por Gênero
-                </CardTitle>
-                <CardDescription>Conversões por gênero</CardDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      Distribuição por Gênero
+                    </CardTitle>
+                    <CardDescription>Conversões por gênero</CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-lg font-bold text-primary">
+                      {genderData.reduce((sum: number, item: any) => sum + item.value, 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -313,7 +541,7 @@ export default function Analytics() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      outerRadius={90}
                       fill="hsl(var(--primary))"
                       dataKey="value"
                     >
@@ -325,8 +553,10 @@ export default function Analytics() {
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} 
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={formatTooltipValue}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -334,110 +564,153 @@ export default function Analytics() {
             </Card>
           )}
 
-          {/* Performance por Dispositivo */}
-          {deviceData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-primary" />
-                  Performance por Dispositivo
-                </CardTitle>
-                <CardDescription>Conversões e ROAS por tipo de dispositivo</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={deviceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} 
-                    />
-                    <Legend />
-                    <Bar dataKey="conversions" fill="hsl(var(--primary))" name="Conversões" />
-                    <Bar dataKey="roas" fill="hsl(var(--chart-3))" name="ROAS" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
+            {/* Performance por Dispositivo */}
+            {deviceData.length > 0 && (
+              <Card className="shadow-card">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Smartphone className="w-5 h-5 text-primary" />
+                        Performance por Dispositivo
+                      </CardTitle>
+                      <CardDescription>Conversões e ROAS por tipo de dispositivo</CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Melhor ROAS</p>
+                      <p className="text-lg font-bold text-primary">
+                        {deviceData.reduce((best: any, curr: any) => 
+                          parseFloat(curr.roas) > parseFloat(best.roas) ? curr : best
+                        ).name}
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={deviceData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        }}
+                        formatter={formatTooltipValue}
+                      />
+                      <Legend />
+                      <Bar dataKey="conversions" fill="hsl(var(--primary))" name="Conversões" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="roas" fill="hsl(var(--chart-3))" name="ROAS" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Performance por Plataforma */}
-          {platformData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-primary" />
-                  Distribuição por Plataforma
-                </CardTitle>
-                <CardDescription>Impressões por plataforma</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={platformData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="hsl(var(--primary))"
-                      dataKey="value"
-                    >
-                      {platformData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} 
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
+            {/* Performance por Plataforma */}
+            {platformData.length > 0 && (
+              <Card className="shadow-card">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-primary" />
+                        Distribuição por Plataforma
+                      </CardTitle>
+                      <CardDescription>Impressões por plataforma</CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Líder</p>
+                      <p className="text-lg font-bold text-primary">
+                        {platformData.reduce((best: any, curr: any) => 
+                          curr.value > best.value ? curr : best
+                        ).name}
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={platformData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={90}
+                        fill="hsl(var(--primary))"
+                        dataKey="value"
+                      >
+                        {platformData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        }}
+                        formatter={formatTooltipValue}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Performance por Horário */}
-          {hourData.length > 0 && (
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
-                  Performance por Horário do Dia
-                </CardTitle>
-                <CardDescription>Conversões e CTR por hora</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={hourData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))', 
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} 
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="conversions" stroke="hsl(var(--primary))" strokeWidth={2} name="Conversões" />
-                    <Line type="monotone" dataKey="ctr" stroke="hsl(var(--chart-4))" strokeWidth={2} name="CTR (%)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+            {/* Performance por Horário */}
+            {hourData.length > 0 && (
+              <Card className="md:col-span-2 shadow-card">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        Performance por Horário do Dia
+                      </CardTitle>
+                      <CardDescription>Conversões e CTR por hora</CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Horário de Pico</p>
+                      <p className="text-lg font-bold text-primary">
+                        {hourData.reduce((best: any, curr: any) => 
+                          curr.conversions > best.conversions ? curr : best
+                        ).name}
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={hourData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        }}
+                        formatter={formatTooltipValue}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="conversions" stroke="hsl(var(--primary))" strokeWidth={3} name="Conversões" dot={{ r: 4 }} />
+                      <Line type="monotone" dataKey="ctr" stroke="hsl(var(--chart-4))" strokeWidth={3} name="CTR (%)" dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
