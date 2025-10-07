@@ -237,6 +237,15 @@ export default function Auth() {
             </Tabs>
           </CardContent>
         </Card>
+
+        <div className="text-center text-xs text-muted-foreground space-y-1">
+          <p>
+            Ao usar esta plataforma, você concorda com nossos{' '}
+            <a href="/terms" className="text-primary hover:underline">
+              Termos de Serviço e Política de Privacidade
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
