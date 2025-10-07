@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Settings as SettingsIcon, Plug, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Settings as SettingsIcon, Plug, CheckCircle2, XCircle, Trash2, Download, Loader2 } from "lucide-react";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useCreateIntegration } from "@/hooks/useCreateIntegration";
 import { useDeleteIntegration } from "@/hooks/useDeleteIntegration";
+import { useImportMetaCampaigns } from "@/hooks/useImportMetaCampaigns";
 import { useClients } from "@/hooks/useClients";
 
 export default function Settings() {
@@ -19,6 +20,7 @@ export default function Settings() {
   const { data: integrations = [], isLoading } = useIntegrations(selectedClientId);
   const createIntegration = useCreateIntegration();
   const deleteIntegration = useDeleteIntegration();
+  const importMetaCampaigns = useImportMetaCampaigns();
 
   const [integrationToDelete, setIntegrationToDelete] = useState<string | null>(null);
 
@@ -192,13 +194,34 @@ export default function Settings() {
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
                   </p>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => setIntegrationToDelete(getIntegration('meta')!.id)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Desconectar
-                  </Button>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      onClick={() => importMetaCampaigns.mutate(selectedClientId)}
+                      disabled={importMetaCampaigns.isPending}
+                      variant="default"
+                    >
+                      {importMetaCampaigns.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Importando...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Importar Campanhas
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => setIntegrationToDelete(getIntegration('meta')!.id)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Desconectar
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleMetaSubmit} className="space-y-4">

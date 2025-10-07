@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.sync-all-integrations]
 verify_jwt = false
+
+[functions.import-meta-campaigns]
+verify_jwt = true

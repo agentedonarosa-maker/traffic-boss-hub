@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
     const { data: integrations, error: intError } = await supabaseAdmin
       .from("integrations")
       .select("id, client_id, user_id, credentials, vault_secret_name, last_sync_at")
-      .eq("platform", "meta_ads")
+      .eq("platform", "meta")
       .eq("is_active", true);
 
     if (intError) {

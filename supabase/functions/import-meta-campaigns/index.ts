@@ -1,0 +1,233 @@
+import { createClient } from "jsr:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface MetaAdsCredentials {
+  access_token: string;
+  ad_account_id: string;
+}
+
+interface MetaCampaign {
+  id: string;
+  name: string;
+  objective: string;
+  status: string;
+  daily_budget?: string;
+  lifetime_budget?: string;
+  start_time?: string;
+  stop_time?: string;
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { client_id } = await req.json();
+
+    if (!client_id) {
+      return new Response(
+        JSON.stringify({ error: "client_id é obrigatório" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Buscar integração Meta Ads do cliente
+    const { data: integration, error: intError } = await supabaseAdmin
+      .from("integrations")
+      .select("id, client_id, user_id, credentials, vault_secret_name")
+      .eq("client_id", client_id)
+      .eq("platform", "meta")
+      .eq("is_active", true)
+      .single();
+
+    if (intError || !integration) {
+      console.error("Integração não encontrada:", intError);
+      return new Response(
+        JSON.stringify({ error: "Integração Meta Ads não encontrada para este cliente" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Buscar credenciais
+    let credentials: MetaAdsCredentials;
+    
+    if (integration.vault_secret_name) {
+      const { data: secretData } = await supabaseAdmin.rpc('vault.decrypted_secret', {
+        secret_name: integration.vault_secret_name
+      });
+      
+      if (secretData?.decrypted_secret) {
+        credentials = JSON.parse(secretData.decrypted_secret);
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Falha ao buscar credenciais do Vault" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      credentials = integration.credentials as MetaAdsCredentials;
+    }
+
+    if (!credentials.access_token || !credentials.ad_account_id) {
+      return new Response(
+        JSON.stringify({ error: "Credenciais inválidas" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Importando campanhas do Meta Ads para cliente ${client_id}...`);
+
+    // Buscar campanhas do Meta Ads via Graph API
+    const metaApiUrl = `https://graph.facebook.com/v18.0/${credentials.ad_account_id}/campaigns`;
+    const params = new URLSearchParams({
+      access_token: credentials.access_token,
+      fields: "id,name,objective,status,daily_budget,lifetime_budget,start_time,stop_time",
+      limit: "100",
+    });
+
+    const metaResponse = await fetch(`${metaApiUrl}?${params.toString()}`);
+
+    if (!metaResponse.ok) {
+      const errorData = await metaResponse.text();
+      console.error(`Meta API error (${metaResponse.status}):`, errorData);
+      return new Response(
+        JSON.stringify({ error: `Erro ao buscar campanhas do Meta Ads: ${metaResponse.status}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const metaData = await metaResponse.json();
+    const metaCampaigns = metaData.data as MetaCampaign[];
+
+    if (!metaCampaigns || metaCampaigns.length === 0) {
+      return new Response(
+        JSON.stringify({ message: "Nenhuma campanha encontrada no Meta Ads", imported: 0, skipped: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Encontradas ${metaCampaigns.length} campanhas no Meta Ads`);
+
+    // Filtrar apenas campanhas ativas
+    const activeCampaigns = metaCampaigns.filter(c => c.status === "ACTIVE");
+    
+    let imported = 0;
+    let skipped = 0;
+    const errors: any[] = [];
+
+    // Buscar campanhas já existentes no banco
+    const { data: existingCampaigns } = await supabaseAdmin
+      .from("campaigns")
+      .select("name")
+      .eq("client_id", client_id)
+      .eq("platform", "Meta Ads");
+
+    const existingNames = new Set(existingCampaigns?.map(c => c.name) || []);
+
+    for (const metaCampaign of activeCampaigns) {
+      try {
+        // Verificar se já existe
+        if (existingNames.has(metaCampaign.name)) {
+          console.log(`Campanha "${metaCampaign.name}" já existe, pulando...`);
+          skipped++;
+          continue;
+        }
+
+        // Calcular orçamento (preferir diário, senão lifetime)
+        let budget = null;
+        if (metaCampaign.daily_budget) {
+          budget = parseFloat(metaCampaign.daily_budget) / 100; // Converter de centavos
+        } else if (metaCampaign.lifetime_budget) {
+          budget = parseFloat(metaCampaign.lifetime_budget) / 100;
+        }
+
+        // Converter datas
+        const startDate = metaCampaign.start_time ? new Date(metaCampaign.start_time).toISOString().split('T')[0] : null;
+        const endDate = metaCampaign.stop_time ? new Date(metaCampaign.stop_time).toISOString().split('T')[0] : null;
+
+        // Mapear objetivo do Meta para formato amigável
+        const objectiveMap: Record<string, string> = {
+          "OUTCOME_LEADS": "Geração de Leads",
+          "OUTCOME_SALES": "Conversões/Vendas",
+          "OUTCOME_TRAFFIC": "Tráfego",
+          "OUTCOME_AWARENESS": "Reconhecimento",
+          "OUTCOME_ENGAGEMENT": "Engajamento",
+        };
+        
+        const objective = objectiveMap[metaCampaign.objective] || metaCampaign.objective;
+
+        // Criar campanha no banco
+        const { error: insertError } = await supabaseAdmin
+          .from("campaigns")
+          .insert({
+            name: metaCampaign.name,
+            client_id: client_id,
+            user_id: integration.user_id,
+            platform: "Meta Ads",
+            objective: objective,
+            budget: budget,
+            start_date: startDate,
+            end_date: endDate,
+            status: "active",
+          });
+
+        if (insertError) {
+          console.error(`Erro ao criar campanha "${metaCampaign.name}":`, insertError);
+          errors.push({ campaign: metaCampaign.name, error: insertError.message });
+        } else {
+          console.log(`Campanha "${metaCampaign.name}" importada com sucesso`);
+          imported++;
+        }
+
+      } catch (error: any) {
+        console.error(`Erro ao processar campanha "${metaCampaign.name}":`, error);
+        errors.push({ campaign: metaCampaign.name, error: error.message });
+      }
+    }
+
+    // Criar notificação para o usuário
+    if (imported > 0) {
+      await supabaseAdmin.rpc('create_notification_secure', {
+        p_user_id: integration.user_id,
+        p_title: 'Campanhas importadas',
+        p_message: `${imported} campanha(s) do Meta Ads foram importadas com sucesso`,
+        p_type: 'success'
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        message: "Importação concluída",
+        imported,
+        skipped,
+        total: activeCampaigns.length,
+        errors: errors.length > 0 ? errors : undefined,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+
+  } catch (error: any) {
+    console.error("Erro na importação de campanhas:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
