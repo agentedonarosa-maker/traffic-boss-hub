@@ -83,7 +83,13 @@ Deno.serve(async (req: Request) => {
           continue;
         }
         
-        console.log(`Processando integração ${integration.id} (credenciais: ***MASKED***)`)
+        // Garantir que o ad_account_id tenha o prefixo "act_"
+        let adAccountId = credentials.ad_account_id.toString();
+        if (!adAccountId.startsWith('act_')) {
+          adAccountId = `act_${adAccountId}`;
+        }
+        
+        console.log(`Processando integração ${integration.id} com Ad Account: ${adAccountId}`)
 
         // Buscar campanhas do cliente
         const { data: campaigns } = await supabaseAdmin
@@ -106,7 +112,7 @@ Deno.serve(async (req: Request) => {
         const dateEnd = today.toISOString().split('T')[0];
 
         // Chamar API do Meta Ads (Graph API)
-        const metaApiUrl = `https://graph.facebook.com/v18.0/${credentials.ad_account_id}/insights`;
+        const metaApiUrl = `https://graph.facebook.com/v18.0/${adAccountId}/insights`;
         const params = new URLSearchParams({
           access_token: credentials.access_token,
           time_range: JSON.stringify({ since: dateStart, until: dateEnd }),

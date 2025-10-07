@@ -86,10 +86,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Garantir que o ad_account_id tenha o prefixo "act_"
+    let adAccountId = credentials.ad_account_id.toString();
+    if (!adAccountId.startsWith('act_')) {
+      adAccountId = `act_${adAccountId}`;
+    }
+
     console.log(`Importando campanhas do Meta Ads para cliente ${client_id}...`);
+    console.log(`Usando Ad Account ID: ${adAccountId}`);
 
     // Buscar campanhas do Meta Ads via Graph API
-    const metaApiUrl = `https://graph.facebook.com/v18.0/${credentials.ad_account_id}/campaigns`;
+    const metaApiUrl = `https://graph.facebook.com/v18.0/${adAccountId}/campaigns`;
     const params = new URLSearchParams({
       access_token: credentials.access_token,
       fields: "id,name,objective,status,daily_budget,lifetime_budget,start_time,stop_time",
@@ -101,8 +108,27 @@ Deno.serve(async (req: Request) => {
     if (!metaResponse.ok) {
       const errorData = await metaResponse.text();
       console.error(`Meta API error (${metaResponse.status}):`, errorData);
+      
+      let errorMessage = `Erro ao conectar com Meta Ads (${metaResponse.status})`;
+      
+      try {
+        const errorJson = JSON.parse(errorData);
+        if (errorJson.error?.message) {
+          errorMessage = errorJson.error.message;
+          
+          // Mensagens mais amigáveis para erros comuns
+          if (errorMessage.includes("does not exist") || errorMessage.includes("missing permissions")) {
+            errorMessage = "Conta de anúncios não encontrada ou sem permissões. Verifique o Account ID e permissões do token.";
+          } else if (errorMessage.includes("access token")) {
+            errorMessage = "Token de acesso inválido ou expirado. Reconecte sua conta Meta Ads.";
+          }
+        }
+      } catch (e) {
+        // Se não conseguir parsear o erro, usa a mensagem padrão
+      }
+      
       return new Response(
-        JSON.stringify({ error: `Erro ao buscar campanhas do Meta Ads: ${metaResponse.status}` }),
+        JSON.stringify({ error: errorMessage }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
