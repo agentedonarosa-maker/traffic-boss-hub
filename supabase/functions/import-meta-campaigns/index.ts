@@ -240,6 +240,7 @@ Deno.serve(async (req: Request) => {
     }
 
     let metricsSynced = 0;
+    let insightsImported = 0;
 
     if (allMetaCampaigns && allMetaCampaigns.length > 0) {
       console.log(`Sincronizando métricas de ${allMetaCampaigns.length} campanhas ativas...`);
@@ -266,7 +267,7 @@ Deno.serve(async (req: Request) => {
         }
         
         try {
-          // Buscar métricas específicas desta campanha do Meta Ads
+          // 1. Buscar métricas agregadas da campanha (para campaign_metrics)
           const campaignInsightsUrl = `https://graph.facebook.com/v18.0/${metaCampaign.id}/insights`;
           const metricsParams = new URLSearchParams({
             access_token: credentials.access_token,
@@ -285,7 +286,7 @@ Deno.serve(async (req: Request) => {
           const insightsData = await insightsResponse.json();
           
           if (insightsData.data && insightsData.data.length > 0) {
-            // Processar cada dia de métricas
+            // Processar cada dia de métricas agregadas
             for (const dayMetrics of insightsData.data) {
               const impressions = parseInt(dayMetrics.impressions || '0');
               const clicks = parseInt(dayMetrics.clicks || '0');
@@ -320,7 +321,7 @@ Deno.serve(async (req: Request) => {
               const cpl = leads > 0 ? spend / leads : 0;
               const roas = spend > 0 ? revenue / spend : 0;
               
-              // Inserir ou atualizar métricas
+              // Inserir ou atualizar métricas agregadas
               const { error: metricsError } = await supabaseAdmin
                 .from('campaign_metrics')
                 .upsert({
@@ -346,24 +347,162 @@ Deno.serve(async (req: Request) => {
                 console.error(`Erro ao salvar métrica da campanha ${metaCampaign.name}:`, metricsError);
               }
             }
-            
-            console.log(`Métricas da campanha "${metaCampaign.name}" sincronizadas`);
           }
+
+          // 2. Buscar ads da campanha para dados granulares
+          console.log(`Buscando anúncios da campanha "${metaCampaign.name}"...`);
+          const adsUrl = `https://graph.facebook.com/v18.0/${metaCampaign.id}/ads`;
+          const adsParams = new URLSearchParams({
+            access_token: credentials.access_token,
+            fields: "id,name,status",
+            limit: "100",
+          });
+
+          const adsResponse = await fetch(`${adsUrl}?${adsParams.toString()}`);
+          
+          if (!adsResponse.ok) {
+            console.error(`Erro ao buscar anúncios da campanha ${metaCampaign.name}`);
+            continue;
+          }
+
+          const adsData = await adsResponse.json();
+          const ads = adsData.data || [];
+
+          // 3. Para cada anúncio, buscar insights granulares com breakdowns
+          for (const ad of ads) {
+            try {
+              // Buscar insights com múltiplos breakdowns
+              const adInsightsUrl = `https://graph.facebook.com/v18.0/${ad.id}/insights`;
+              const breakdownParams = new URLSearchParams({
+                access_token: credentials.access_token,
+                time_range: JSON.stringify({ since: dateStart, until: dateEnd }),
+                time_increment: "1",
+                fields: "impressions,clicks,spend,actions,action_values",
+                breakdowns: "age,gender,device_platform,publisher_platform,placement,hourly_stats_aggregated_by_advertiser_time_zone",
+                limit: "500",
+              });
+
+              const adInsightsResponse = await fetch(`${adInsightsUrl}?${breakdownParams.toString()}`);
+              
+              if (!adInsightsResponse.ok) {
+                console.error(`Erro ao buscar insights do anúncio ${ad.name}`);
+                continue;
+              }
+
+              const adInsightsData = await adInsightsResponse.json();
+              
+              if (adInsightsData.data && adInsightsData.data.length > 0) {
+                // Processar cada registro granular
+                for (const insight of adInsightsData.data) {
+                  const impressions = parseInt(insight.impressions || '0');
+                  const clicks = parseInt(insight.clicks || '0');
+                  const spend = parseFloat(insight.spend || '0');
+                  
+                  // Extrair conversões e receita
+                  let conversions = 0;
+                  let conversionValue = 0;
+                  
+                  if (insight.actions) {
+                    for (const action of insight.actions) {
+                      if (action.action_type === 'lead' || action.action_type === 'purchase' || action.action_type === 'omni_purchase') {
+                        conversions += parseInt(action.value || '0');
+                      }
+                    }
+                  }
+                  
+                  if (insight.action_values) {
+                    for (const actionValue of insight.action_values) {
+                      if (actionValue.action_type === 'purchase' || actionValue.action_type === 'omni_purchase') {
+                        conversionValue += parseFloat(actionValue.value || '0');
+                      }
+                    }
+                  }
+                  
+                  // Calcular KPIs
+                  const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+                  const cpc = clicks > 0 ? spend / clicks : 0;
+                  const cpa = conversions > 0 ? spend / conversions : 0;
+                  const roas = spend > 0 ? conversionValue / spend : 0;
+
+                  // Extrair dimensões do breakdown
+                  const ageRange = insight.age || null;
+                  const gender = insight.gender || null;
+                  const deviceType = insight.device_platform || null;
+                  const publisherPlatform = insight.publisher_platform || null;
+                  const placement = insight.placement || null;
+                  
+                  // Extrair horário se disponível (do hourly_stats)
+                  let hourOfDay = null;
+                  if (insight.hourly_stats_aggregated_by_advertiser_time_zone) {
+                    const hourly = JSON.parse(insight.hourly_stats_aggregated_by_advertiser_time_zone);
+                    if (hourly && hourly.length > 0) {
+                      hourOfDay = parseInt(hourly[0].split(':')[0]);
+                    }
+                  }
+
+                  // Calcular dia da semana
+                  const date = new Date(insight.date_start);
+                  const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
+
+                  // Inserir na tabela ad_insights
+                  const { error: insightError } = await supabaseAdmin
+                    .from('ad_insights')
+                    .upsert({
+                      user_id: integration.user_id,
+                      campaign_id: dbCampaignId,
+                      ad_id: ad.id,
+                      ad_name: ad.name,
+                      date: insight.date_start,
+                      age_range: ageRange,
+                      gender: gender,
+                      device_type: deviceType,
+                      publisher_platform: publisherPlatform,
+                      placement: placement,
+                      hour_of_day: hourOfDay,
+                      day_of_week: dayOfWeek,
+                      impressions,
+                      clicks,
+                      spend,
+                      conversions,
+                      conversion_value: conversionValue,
+                      ctr: parseFloat(ctr.toFixed(2)),
+                      cpc: parseFloat(cpc.toFixed(2)),
+                      cpa: parseFloat(cpa.toFixed(2)),
+                      roas: parseFloat(roas.toFixed(2)),
+                    }, {
+                      onConflict: 'user_id,campaign_id,ad_id,date,age_range,gender,device_type,publisher_platform,placement,hour_of_day'
+                    });
+
+                  if (!insightError) {
+                    insightsImported++;
+                  } else {
+                    console.error(`Erro ao salvar insight granular:`, insightError);
+                  }
+                }
+              }
+            } catch (error) {
+              console.error(`Erro ao processar insights do anúncio ${ad.name}:`, error);
+              continue;
+            }
+          }
+          
+          console.log(`Métricas da campanha "${metaCampaign.name}" sincronizadas (${insightsImported} insights granulares)`);
+          
         } catch (error) {
           console.error(`Erro ao processar métricas da campanha ${metaCampaign.name}:`, error);
           continue;
         }
       }
       
-      console.log(`Total de ${metricsSynced} métricas sincronizadas`);
+      console.log(`Total de ${metricsSynced} métricas agregadas e ${insightsImported} insights granulares sincronizados`);
     }
 
     // Criar notificação para o usuário
-    if (imported > 0) {
+    if (imported > 0 || insightsImported > 0) {
       await supabaseAdmin.rpc('create_notification_secure', {
         p_user_id: integration.user_id,
-        p_title: 'Campanhas importadas',
-        p_message: `${imported} campanha(s) importadas e ${metricsSynced} métricas sincronizadas`,
+        p_title: 'Dados importados do Meta Ads',
+        p_message: `${imported} campanha(s), ${metricsSynced} métricas e ${insightsImported} insights granulares sincronizados`,
         p_type: 'success'
       });
     }
@@ -374,6 +513,7 @@ Deno.serve(async (req: Request) => {
         imported,
         skipped,
         metricsSynced,
+        insightsImported,
         total: activeCampaigns.length,
         errors: errors.length > 0 ? errors : undefined,
       }),
