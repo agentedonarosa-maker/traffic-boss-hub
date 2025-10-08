@@ -26,6 +26,7 @@ import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useCampaignMetrics } from "@/hooks/useCampaignMetrics";
 import { useClients } from "@/hooks/useClients";
+import { ResponsiveTable } from "@/components/ui/responsive-table";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
@@ -80,19 +81,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm md:text-base text-muted-foreground mt-1">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">
           Visão geral do desempenho das suas campanhas
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <MetricCard
           title="Total de Clientes"
           value={dashboardMetrics?.totalClients || 0}
-          icon={<Building className="w-5 h-5" />}
+          icon={<Building className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Clientes ativos"
           variant="primary"
         />
@@ -100,67 +101,68 @@ export default function Dashboard() {
         <MetricCard
           title="Campanhas Ativas"
           value={dashboardMetrics?.activeCampaigns || 0}
-          icon={<Target className="w-5 h-5" />}
+          icon={<Target className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Em execução"
         />
 
         <MetricCard
           title="Investimento Total"
           value={formatCurrency(dashboardMetrics?.totalInvestment || 0)}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Período atual"
         />
 
         <MetricCard
           title="ROAS Médio"
           value={`${(dashboardMetrics?.avgRoas || 0).toFixed(1)}x`}
-          icon={<TrendingUp className="w-5 h-5" />}
+          icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Retorno sobre investimento"
           variant="success"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <MetricCard
           title="Impressões"
           value={(dashboardMetrics?.totalImpressions || 0).toLocaleString()}
-          icon={<Eye className="w-5 h-5" />}
+          icon={<Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Total de visualizações"
         />
 
         <MetricCard
           title="Cliques"
           value={(dashboardMetrics?.totalClicks || 0).toLocaleString()}
-          icon={<MousePointer className="w-5 h-5" />}
+          icon={<MousePointer className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle={`CTR: ${(dashboardMetrics?.avgCtr || 0).toFixed(2)}%`}
         />
 
         <MetricCard
           title="Leads Gerados"
           value={dashboardMetrics?.totalLeads || 0}
-          icon={<UserCheck className="w-5 h-5" />}
+          icon={<UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Contatos qualificados"
         />
 
         <MetricCard
           title="Vendas"
           value={dashboardMetrics?.totalSales || 0}
-          icon={<ShoppingCart className="w-5 h-5" />}
+          icon={<ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Conversões realizadas"
           variant="success"
         />
       </div>
 
       <Card className="shadow-card">
-        <div className="p-4 md:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg md:text-xl font-semibold text-foreground">
+        <div className="p-3 sm:p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-foreground">
               Campanhas Recentes
             </h2>
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate("/campaigns")}
+              className="h-8 text-xs sm:text-sm"
             >
               Ver todas
             </Button>
@@ -168,62 +170,60 @@ export default function Dashboard() {
 
           {recentCampaigns.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-sm md:text-base text-muted-foreground">
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                 Nenhuma campanha cadastrada ainda.
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Plataforma</TableHead>
-                  <TableHead>Investimento</TableHead>
-                  <TableHead>ROAS</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentCampaigns.map((campaign) => {
-                  const { totalInvestment, roas } = getCampaignMetrics(campaign.id);
-                  return (
-                    <TableRow key={campaign.id}>
-                      <TableCell className="font-medium text-foreground">
-                        {campaign.name}
-                      </TableCell>
-                      <TableCell>{getClientName(campaign.client_id)}</TableCell>
-                      <TableCell>
-                        <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium">
-                          {campaign.platform}
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatCurrency(totalInvestment)}</TableCell>
-                      <TableCell className="font-bold text-success">
-                        {roas.toFixed(1)}x
-                      </TableCell>
-                      <TableCell>{getStatusBadge(campaign.status)}</TableCell>
-                    </TableRow>
-                   );
-                 })}
-               </TableBody>
-             </Table>
-              </div>
-            </div>
+            <ResponsiveTable>
+              <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs sm:text-sm">Nome</TableHead>
+                <TableHead className="text-xs sm:text-sm">Cliente</TableHead>
+                <TableHead className="text-xs sm:text-sm">Plataforma</TableHead>
+                <TableHead className="text-xs sm:text-sm">Investimento</TableHead>
+                <TableHead className="text-xs sm:text-sm">ROAS</TableHead>
+                <TableHead className="text-xs sm:text-sm">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentCampaigns.map((campaign) => {
+                const { totalInvestment, roas } = getCampaignMetrics(campaign.id);
+                return (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="font-medium text-foreground text-xs sm:text-sm">
+                      {campaign.name}
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm">{getClientName(campaign.client_id)}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">
+                      <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
+                        {campaign.platform}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm">{formatCurrency(totalInvestment)}</TableCell>
+                    <TableCell className="font-bold text-success text-xs sm:text-sm">
+                      {roas.toFixed(1)}x
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm">{getStatusBadge(campaign.status)}</TableCell>
+                  </TableRow>
+                 );
+               })}
+             </TableBody>
+           </Table>
+            </ResponsiveTable>
            )}
          </div>
        </Card>
 
       <Card className="shadow-card">
-        <div className="p-4 md:p-6">
-          <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4">
+        <div className="p-3 sm:p-4 md:p-6">
+          <h2 className="text-base sm:text-lg md:text-xl font-semibold text-foreground mb-3 sm:mb-4">
             Ações Rápidas
           </h2>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
             <Button 
-              className="bg-gradient-primary w-full sm:w-auto"
+              className="bg-gradient-primary w-full sm:w-auto text-sm"
               onClick={() => navigate("/clients")}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -231,7 +231,7 @@ export default function Dashboard() {
             </Button>
             <Button 
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm"
               onClick={() => navigate("/campaigns")}
             >
               <Target className="w-4 h-4 mr-2" />
@@ -239,7 +239,7 @@ export default function Dashboard() {
             </Button>
             <Button 
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm"
               onClick={() => navigate("/reports")}
             >
               <FileText className="w-4 h-4 mr-2" />

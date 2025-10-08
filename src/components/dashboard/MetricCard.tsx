@@ -1,96 +1,52 @@
-import { Card } from "@/components/ui/card";
-import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
   title: string;
   value: string | number;
-  change?: number;
-  changeType?: "positive" | "negative";
   icon?: React.ReactNode;
   subtitle?: string;
+  trend?: string;
   variant?: "default" | "success" | "warning" | "primary";
 }
 
-export function MetricCard({
-  title,
-  value,
-  change,
-  changeType,
-  icon,
-  subtitle,
-  variant = "default",
-}: MetricCardProps) {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case "success":
-        return "bg-gradient-success text-success-foreground";
-      case "primary":
-        return "bg-gradient-primary text-primary-foreground";
-      case "warning":
-        return "bg-warning text-warning-foreground";
-      default:
-        return "bg-card text-card-foreground";
-    }
+export function MetricCard({ title, value, icon, subtitle, trend, variant = "default" }: MetricCardProps) {
+  const variants = {
+    default: "bg-card",
+    primary: "bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20",
+    success: "bg-gradient-to-br from-success/10 to-success/5 border-success/20",
+    warning: "bg-gradient-to-br from-warning/10 to-warning/5 border-warning/20",
   };
 
   return (
-    <Card className={cn("p-6 shadow-card border-0", getVariantStyles())}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            {icon && (
-              <div className={cn(
-                "p-2 rounded-lg",
-                variant === "default" ? "bg-primary/10 text-primary" : "bg-white/20 text-current"
-              )}>
-                {icon}
-              </div>
+    <Card className={cn("shadow-card backdrop-blur-sm transition-all duration-200 hover:shadow-lg", variants[variant])}>
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mt-1 sm:mt-2 truncate">{value}</p>
+            {subtitle && (
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">{subtitle}</p>
             )}
-            <div>
-              <p className={cn(
-                "text-sm font-medium",
-                variant === "default" ? "text-muted-foreground" : "text-current/80"
-              )}>
-                {title}
-              </p>
-              {subtitle && (
-                <p className={cn(
-                  "text-xs",
-                  variant === "default" ? "text-muted-foreground" : "text-current/60"
-                )}>
-                  {subtitle}
-                </p>
-              )}
-            </div>
           </div>
-          
-          <div className="mt-4 flex items-end justify-between">
-            <p className={cn(
-              "text-3xl font-bold",
-              variant === "default" ? "text-foreground" : "text-current"
-            )}>
-              {value}
-            </p>
-            
-            {change !== undefined && (
-              <div className={cn(
-                "flex items-center gap-1 text-sm font-medium",
-                changeType === "positive" 
-                  ? variant === "default" ? "text-success" : "text-current"
-                  : variant === "default" ? "text-destructive" : "text-current/80"
-              )}>
-                {changeType === "positive" ? (
-                  <ArrowUpIcon className="w-4 h-4" />
-                ) : (
-                  <ArrowDownIcon className="w-4 h-4" />
-                )}
-                {Math.abs(change)}%
-              </div>
-            )}
+          <div className={cn(
+            "p-2 sm:p-2.5 md:p-3 rounded-lg flex-shrink-0",
+            variant === "primary" && "bg-primary/10 text-primary",
+            variant === "success" && "bg-success/10 text-success",
+            variant === "warning" && "bg-warning/10 text-warning",
+            variant === "default" && "bg-muted"
+          )}>
+            {icon}
           </div>
         </div>
-      </div>
+        {trend && (
+          <div className="mt-3 sm:mt-4 flex items-center text-[10px] sm:text-xs">
+            <TrendingUp className="w-3 h-3 mr-1 text-success flex-shrink-0" />
+            <span className="text-success font-medium truncate">{trend}</span>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }

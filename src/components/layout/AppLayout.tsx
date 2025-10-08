@@ -25,21 +25,21 @@ export function AppLayout() {
 
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="h-14 md:h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-            <div className="flex items-center justify-between px-4 md:px-6 h-full">
+          <header className="h-12 sm:h-14 md:h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+            <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 h-full">
               <div className="flex items-center gap-2 md:gap-4">
-                <SidebarTrigger />
+                <SidebarTrigger className="h-8 w-8 sm:h-9 sm:w-9" />
                 
-                <div className="relative hidden md:block">
+                <div className="relative hidden lg:block">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder="Buscar clientes, campanhas..."
-                    className="w-80 pl-10 bg-background/50"
+                    className="w-64 xl:w-80 pl-10 bg-background/50 h-9"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <NotificationsPopover />
                 
                 <Button 
@@ -47,12 +47,12 @@ export function AppLayout() {
                   size="icon" 
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="h-10 w-10 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full hover:bg-accent/10 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoggingOut ? (
-                    <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <LogOut className="w-5 h-5 text-muted-foreground" />
+                    <LogOut className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   )}
                 </Button>
               </div>

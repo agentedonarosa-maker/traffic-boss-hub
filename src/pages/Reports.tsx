@@ -28,16 +28,16 @@ export default function Reports() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Relatórios</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Relatórios</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
             Gere relatórios detalhados das suas campanhas por cliente
           </p>
         </div>
         {reportData && (
-          <Button onClick={clearReport} variant="outline" className="w-full sm:w-auto">
+          <Button onClick={clearReport} variant="outline" className="w-full sm:w-auto text-sm">
             Nova Consulta
           </Button>
         )}

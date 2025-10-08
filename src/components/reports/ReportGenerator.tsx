@@ -61,21 +61,21 @@ export default function ReportGenerator({ onGenerate, loading }: ReportGenerator
   };
 
   return (
-    <Card className="border-border/50">
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <Card className="border-border/50 shadow-card">
+      <CardHeader className="p-3 sm:p-4 md:p-6">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle>Gerar Relatório</CardTitle>
-            <CardDescription>Selecione o cliente e o período para gerar o relatório</CardDescription>
+            <CardTitle className="text-base sm:text-lg md:text-xl">Gerar Relatório</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Selecione o cliente e o período para gerar o relatório</CardDescription>
           </div>
-          <Calendar className="w-8 h-8 text-muted-foreground" />
+          <Calendar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-muted-foreground flex-shrink-0" />
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 md:p-6 pt-0">
         <div className="space-y-2">
-          <Label htmlFor="client">Cliente</Label>
+          <Label htmlFor="client" className="text-xs sm:text-sm">Cliente</Label>
           <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger id="client">
+            <SelectTrigger id="client" className="h-9 text-sm">
               <SelectValue placeholder="Selecione um cliente" />
             </SelectTrigger>
             <SelectContent>
@@ -89,9 +89,9 @@ export default function ReportGenerator({ onGenerate, loading }: ReportGenerator
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="reportType">Tipo de Relatório</Label>
+          <Label htmlFor="reportType" className="text-xs sm:text-sm">Tipo de Relatório</Label>
           <Select value={reportType} onValueChange={handleReportTypeChange}>
-            <SelectTrigger id="reportType">
+            <SelectTrigger id="reportType" className="h-9 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -102,23 +102,25 @@ export default function ReportGenerator({ onGenerate, loading }: ReportGenerator
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-2">
-            <Label htmlFor="startDate">Data Início</Label>
+            <Label htmlFor="startDate" className="text-xs sm:text-sm">Data Início</Label>
             <Input
               id="startDate"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              className="h-9 text-sm"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endDate">Data Fim</Label>
+            <Label htmlFor="endDate" className="text-xs sm:text-sm">Data Fim</Label>
             <Input
               id="endDate"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              className="h-9 text-sm"
             />
           </div>
         </div>
@@ -126,7 +128,7 @@ export default function ReportGenerator({ onGenerate, loading }: ReportGenerator
         <Button 
           onClick={handleGenerate} 
           disabled={!selectedClient || !startDate || !endDate || loading}
-          className="w-full"
+          className="w-full h-10 text-sm"
         >
           <Download className="w-4 h-4 mr-2" />
           {loading ? 'Gerando...' : 'Gerar Relatório'}

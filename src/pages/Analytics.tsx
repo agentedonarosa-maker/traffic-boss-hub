@@ -269,38 +269,39 @@ export default function Analytics() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <BarChart3 className="w-8 h-8 text-primary" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary" />
             Analytics Avançada
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1 sm:mt-2">
             Análise granular de performance: demografia, dispositivos, horários e plataformas
           </p>
         </div>
         {insights && insights.length > 0 && (
-          <Button onClick={handleExportPDF} variant="outline" className="gap-2">
+          <Button onClick={handleExportPDF} variant="outline" className="gap-2 w-full sm:w-auto text-sm">
             <FileDown className="w-4 h-4" />
-            Exportar PDF
+            <span className="hidden sm:inline">Exportar PDF</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
         )}
       </div>
 
       {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filtros</CardTitle>
-          <CardDescription>Selecione os parâmetros para análise detalhada</CardDescription>
+      <Card className="shadow-card">
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-base sm:text-lg">Filtros</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Selecione os parâmetros para análise detalhada</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Cliente</label>
+              <label className="text-xs sm:text-sm font-medium">Cliente</label>
               <Select value={selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Todos os clientes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -315,9 +316,9 @@ export default function Analytics() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Campanha</label>
+              <label className="text-xs sm:text-sm font-medium">Campanha</label>
               <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Todas as campanhas" />
                 </SelectTrigger>
                 <SelectContent>
@@ -332,9 +333,9 @@ export default function Analytics() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Período</label>
+              <label className="text-xs sm:text-sm font-medium">Período</label>
               <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -355,7 +356,7 @@ export default function Analytics() {
                   setDateRange("7");
                 }}
                 variant="outline"
-                className="w-full"
+                className="w-full h-9 text-sm"
               >
                 Limpar Filtros
               </Button>
@@ -409,32 +410,32 @@ export default function Analytics() {
       ) : (
         <>
           {/* Summary Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             <MetricCard
               title="Total de Impressões"
               value={totalImpressions.toLocaleString("pt-BR")}
-              icon={<Eye className="w-5 h-5" />}
+              icon={<Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
               subtitle={`Últimos ${dateRange} dias`}
               variant="primary"
             />
             <MetricCard
               title="Conversões"
               value={totalConversions.toLocaleString("pt-BR")}
-              icon={<ShoppingCart className="w-5 h-5" />}
+              icon={<ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />}
               subtitle={`CTR: ${avgCtr.toFixed(2)}%`}
               variant="success"
             />
             <MetricCard
               title="Investimento"
-              value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalSpend)}
-              icon={<DollarSign className="w-5 h-5" />}
+              value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 0 }).format(totalSpend)}
+              icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />}
               subtitle={`${totalClicks.toLocaleString()} cliques`}
             />
             <MetricCard
               title="ROAS Médio"
               value={`${avgRoas.toFixed(1)}x`}
-              icon={<TrendingUp className="w-5 h-5" />}
-              subtitle={`Receita: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact" }).format(totalRevenue)}`}
+              icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />}
+              subtitle={`Receita: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 0 }).format(totalRevenue)}`}
               variant="success"
             />
           </div>
@@ -465,7 +466,7 @@ export default function Analytics() {
           )}
 
           {/* Charts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
             {/* Performance por Faixa Etária */}
           {ageData.length > 0 && (
             <Card className="shadow-card">
@@ -488,8 +489,8 @@ export default function Analytics() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <ResponsiveContainer width="100%" height={250} className="min-h-[200px] sm:min-h-[250px]">
                   <BarChart data={ageData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -532,8 +533,8 @@ export default function Analytics() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <ResponsiveContainer width="100%" height={250} className="min-h-[200px] sm:min-h-[250px]">
                   <PieChart>
                     <Pie
                       data={genderData}
@@ -586,8 +587,8 @@ export default function Analytics() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="p-3 sm:p-4 md:p-6">
+                  <ResponsiveContainer width="100%" height={250} className="min-h-[200px] sm:min-h-[250px]">
                     <BarChart data={deviceData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -632,8 +633,8 @@ export default function Analytics() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="p-3 sm:p-4 md:p-6">
+                  <ResponsiveContainer width="100%" height={250} className="min-h-[200px] sm:min-h-[250px]">
                     <PieChart>
                       <Pie
                         data={platformData}
@@ -666,7 +667,7 @@ export default function Analytics() {
 
             {/* Performance por Horário */}
             {hourData.length > 0 && (
-              <Card className="md:col-span-2 shadow-card">
+              <Card className="lg:col-span-2 shadow-card">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -686,8 +687,8 @@ export default function Analytics() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="p-3 sm:p-4 md:p-6">
+                  <ResponsiveContainer width="100%" height={250} className="min-h-[200px] sm:min-h-[250px]">
                     <LineChart data={hourData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />

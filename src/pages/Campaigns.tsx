@@ -61,6 +61,7 @@ import { useCampaignMetrics } from "@/hooks/useCampaignMetrics";
 import { useClients } from "@/hooks/useClients";
 import { CampaignForm } from "@/components/campaigns/CampaignForm";
 import type { CampaignFormData } from "@/lib/validations/campaign";
+import { ResponsiveTable } from "@/components/ui/responsive-table";
 import type { Campaign } from "@/hooks/useCampaigns";
 export default function Campaigns() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -219,26 +220,26 @@ export default function Campaigns() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Campanhas</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Campanhas</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">
             Monitore e gerencie suas campanhas de tráfego pago
           </p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <Button 
-            className="bg-gradient-primary w-full sm:w-auto"
+            className="bg-gradient-primary w-full sm:w-auto text-sm"
             onClick={() => setIsCreateDialogOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Nova Campanha</span>
             <span className="sm:hidden">Nova</span>
           </Button>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Nova Campanha</DialogTitle>
             </DialogHeader>
@@ -251,11 +252,11 @@ export default function Campaigns() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <MetricCard
           title="Investimento Total"
           value={formatCurrency(totalSpend)}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Todas as campanhas"
           variant="primary"
         />
@@ -263,14 +264,14 @@ export default function Campaigns() {
         <MetricCard
           title="Leads Gerados"
           value={totalLeads.toLocaleString()}
-          icon={<UserCheck className="w-5 h-5" />}
+          icon={<UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Total"
         />
 
         <MetricCard
           title="Vendas"
           value={totalSales}
-          icon={<Target className="w-5 h-5" />}
+          icon={<Target className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Conversões"
           variant="success"
         />
@@ -278,26 +279,26 @@ export default function Campaigns() {
         <MetricCard
           title="ROAS Médio"
           value={`${avgRoas.toFixed(1)}x`}
-          icon={<TrendingUp className="w-5 h-5" />}
+          icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />}
           subtitle="Retorno"
         />
       </div>
 
       {/* Filtros */}
-      <Card className="p-4 shadow-card">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+      <Card className="p-3 sm:p-4 shadow-card">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 sm:gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Buscar campanhas ou clientes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-9 text-sm"
             />
           </div>
           
           <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger className="w-full md:w-[180px]">
+            <SelectTrigger className="w-full lg:w-[180px] h-9 text-sm">
               <SelectValue placeholder="Todos os clientes" />
             </SelectTrigger>
             <SelectContent>
@@ -311,7 +312,7 @@ export default function Campaigns() {
           </Select>
           
           <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-            <SelectTrigger className="w-full md:w-[180px]">
+            <SelectTrigger className="w-full lg:w-[180px] h-9 text-sm">
               <SelectValue placeholder="Todas as plataformas" />
             </SelectTrigger>
             <SelectContent>
@@ -325,113 +326,111 @@ export default function Campaigns() {
       </Card>
 
       <Card className="shadow-card">
-        <div className="p-4 md:p-6">
+        <div className="p-3 sm:p-4 md:p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredCampaigns.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-sm md:text-base text-muted-foreground">
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                 {searchTerm
                   ? "Nenhuma campanha encontrada com esse termo."
                   : "Nenhuma campanha cadastrada ainda."}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-              <div className="inline-block min-w-full align-middle">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Campanha</TableHead>
-                    <TableHead>Plataforma</TableHead>
-                    <TableHead>Orçamento</TableHead>
-                    <TableHead>Investimento</TableHead>
-                    <TableHead>Leads</TableHead>
-                    <TableHead>CPL</TableHead>
-                    <TableHead>ROAS</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCampaigns.map((campaign) => {
-                    const metrics = getCampaignMetrics(campaign.id);
-                    return (
-                      <TableRow key={campaign.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-foreground">{campaign.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {getClientName(campaign.client_id)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium">
-                            {campaign.platform}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {campaign.budget ? formatCurrency(campaign.budget) : "—"}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(metrics.totalInvestment)}
-                        </TableCell>
-                        <TableCell className="font-medium text-primary">
-                          {metrics.totalLeads}
-                        </TableCell>
-                        <TableCell>
-                          {metrics.cpl > 0 ? formatCurrency(metrics.cpl) : "—"}
-                        </TableCell>
-                        <TableCell className="font-bold text-success">
-                          {metrics.roas > 0 ? `${metrics.roas.toFixed(1)}x` : "—"}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(campaign.status)}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedCampaign(campaign);
-                                  setIsViewDialogOpen(true);
-                                }}
-                              >
-                                <Eye className="w-4 h-4 mr-2" />
-                                Visualizar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedCampaign(campaign);
-                                  setIsEditDialogOpen(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => setCampaignToDelete(campaign.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                 })}
-               </TableBody>
-             </Table>
-              </div>
-           </div>
+            <ResponsiveTable>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs sm:text-sm">Campanha</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Plataforma</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Orçamento</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Investimento</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Leads</TableHead>
+                  <TableHead className="text-xs sm:text-sm">CPL</TableHead>
+                  <TableHead className="text-xs sm:text-sm">ROAS</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCampaigns.map((campaign) => {
+                  const metrics = getCampaignMetrics(campaign.id);
+                  return (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="text-xs sm:text-sm">
+                        <div>
+                          <p className="font-medium text-foreground">{campaign.name}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">
+                            {getClientName(campaign.client_id)}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
+                          {campaign.platform}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs sm:text-sm">
+                        {campaign.budget ? formatCurrency(campaign.budget) : "—"}
+                      </TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        {formatCurrency(metrics.totalInvestment)}
+                      </TableCell>
+                      <TableCell className="font-medium text-primary text-xs sm:text-sm">
+                        {metrics.totalLeads}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        {metrics.cpl > 0 ? formatCurrency(metrics.cpl) : "—"}
+                      </TableCell>
+                      <TableCell className="font-bold text-success text-xs sm:text-sm">
+                        {metrics.roas > 0 ? `${metrics.roas.toFixed(1)}x` : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">{getStatusBadge(campaign.status)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-background">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedCampaign(campaign);
+                                setIsViewDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Visualizar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedCampaign(campaign);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setCampaignToDelete(campaign.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+               })}
+             </TableBody>
+           </Table>
+            </ResponsiveTable>
            )}
          </div>
        </Card>

@@ -52,6 +52,7 @@ import { useClientAccess, useGenerateClientAccess } from "@/hooks/useClientAcces
 import { ClientForm } from "@/components/clients/ClientForm";
 import { toast } from "@/hooks/use-toast";
 import type { ClientFormData } from "@/lib/validations/client";
+import { ResponsiveTable } from "@/components/ui/responsive-table";
 import type { Client } from "@/hooks/useClients";
 
 export default function Clients() {
@@ -174,24 +175,24 @@ export default function Clients() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Clientes</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Clientes</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">
             Gerencie seus clientes de tráfego pago
           </p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-primary w-full sm:w-auto">
+            <Button className="bg-gradient-primary w-full sm:w-auto text-sm">
               <Plus className="w-4 h-4 mr-2" />
               Novo Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Adicionar Novo Cliente</DialogTitle>
             </DialogHeader>
@@ -205,60 +206,60 @@ export default function Clients() {
       </div>
 
       {/* Filtros e Busca */}
-      <Card className="p-4 shadow-card">
-        <div className="flex items-center gap-4">
+      <Card className="p-3 sm:p-4 shadow-card">
+        <div className="flex items-center gap-3 sm:gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Buscar por nome, empresa ou nicho..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-9 text-sm"
             />
           </div>
         </div>
       </Card>
 
       {/* Estatísticas Rápidas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="p-4 shadow-card">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Building className="w-5 h-5 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+              <Building className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
-            <div>
-              <p className="text-xl md:text-2xl font-bold text-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                 {clients.length}
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground">Total de Clientes</p>
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total de Clientes</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 shadow-card">
+        <Card className="p-3 sm:p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-success/10 rounded-lg">
-              <Building className="w-5 h-5 text-success" />
+            <div className="p-2 bg-success/10 rounded-lg flex-shrink-0">
+              <Building className="w-4 h-4 sm:w-5 sm:h-5 text-success" />
             </div>
-            <div>
-              <p className="text-xl md:text-2xl font-bold text-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                 {clients.length}
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground">Clientes Ativos</p>
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Clientes Ativos</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 shadow-card">
+        <Card className="p-3 sm:p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-warning/10 rounded-lg">
-              <DollarSign className="w-5 h-5 text-warning" />
+            <div className="p-2 bg-warning/10 rounded-lg flex-shrink-0">
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-warning" />
             </div>
-            <div>
-              <p className="text-xl md:text-2xl font-bold text-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
                 {formatCurrency(totalBudget)}
               </p>
-              <p className="text-xs md:text-sm text-muted-foreground">Orçamento Total</p>
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Orçamento Total</p>
             </div>
           </div>
         </Card>
@@ -266,99 +267,97 @@ export default function Clients() {
 
       {/* Tabela de Clientes */}
       <Card className="shadow-card">
-        <div className="p-4 md:p-6">
+        <div className="p-3 sm:p-4 md:p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredClients.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-sm md:text-base text-muted-foreground">
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                 {searchTerm
                   ? "Nenhum cliente encontrado com esse termo."
                   : "Nenhum cliente cadastrado ainda."}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Nicho</TableHead>
-                  <TableHead>Orçamento</TableHead>
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {client.name}
-                        </p>
-                        {client.company && (
-                          <p className="text-sm text-muted-foreground">
-                            {client.company}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-sm">
-                        {client.contact || "Não informado"}
+            <ResponsiveTable>
+              <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs sm:text-sm">Cliente</TableHead>
+                <TableHead className="text-xs sm:text-sm">Contato</TableHead>
+                <TableHead className="text-xs sm:text-sm">Nicho</TableHead>
+                <TableHead className="text-xs sm:text-sm">Orçamento</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredClients.map((client) => (
+                <TableRow key={client.id}>
+                  <TableCell className="text-xs sm:text-sm">
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {client.name}
                       </p>
-                    </TableCell>
-                    <TableCell>{client.niche || "—"}</TableCell>
-                    <TableCell className="font-medium text-success">
-                      {formatCurrency(client.monthly_budget)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <ClientAccessButton clientId={client.id} />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedClient(client);
-                              setIsViewDialogOpen(true);
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Visualizar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedClient(client);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setClientToDelete(client.id)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                 ))}
-               </TableBody>
-             </Table>
-              </div>
-            </div>
+                      {client.company && (
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
+                          {client.company}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs sm:text-sm">
+                    <p className="text-xs sm:text-sm">
+                      {client.contact || "Não informado"}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-xs sm:text-sm">{client.niche || "—"}</TableCell>
+                  <TableCell className="font-medium text-success text-xs sm:text-sm">
+                    {formatCurrency(client.monthly_budget)}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-background">
+                        <ClientAccessButton clientId={client.id} />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedClient(client);
+                            setIsViewDialogOpen(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Visualizar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedClient(client);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setClientToDelete(client.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+               ))}
+             </TableBody>
+           </Table>
+            </ResponsiveTable>
            )}
          </div>
        </Card>

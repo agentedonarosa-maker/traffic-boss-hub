@@ -62,6 +62,8 @@ export const useGenerateReport = () => {
     setLoading(true);
 
     try {
+      console.log('[Report] Starting report generation:', params);
+
       // Get client info
       const { data: client, error: clientError } = await supabase
         .from('clients')
@@ -70,7 +72,12 @@ export const useGenerateReport = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (clientError) throw clientError;
+      if (clientError) {
+        console.error('[Report] Client error:', clientError);
+        throw new Error('Cliente não encontrado');
+      }
+
+      console.log('[Report] Client found:', client);
 
       // Get campaigns for this client
       const { data: campaigns, error: campaignsError } = await supabase
@@ -79,7 +86,16 @@ export const useGenerateReport = () => {
         .eq('client_id', params.clientId)
         .eq('user_id', user.id);
 
-      if (campaignsError) throw campaignsError;
+      if (campaignsError) {
+        console.error('[Report] Campaigns error:', campaignsError);
+        throw new Error('Erro ao buscar campanhas');
+      }
+
+      console.log('[Report] Found campaigns:', campaigns?.length || 0);
+
+      if (!campaigns || campaigns.length === 0) {
+        throw new Error('Nenhuma campanha encontrada para este cliente');
+      }
 
       const campaignIds = campaigns?.map(c => c.id) || [];
 
@@ -92,7 +108,16 @@ export const useGenerateReport = () => {
         .lte('date', params.endDate)
         .eq('user_id', user.id);
 
-      if (metricsError) throw metricsError;
+      if (metricsError) {
+        console.error('[Report] Metrics error:', metricsError);
+        throw new Error('Erro ao buscar métricas');
+      }
+
+      console.log('[Report] Found metrics:', metrics?.length || 0, 'for period', params.startDate, 'to', params.endDate);
+
+      if (!metrics || metrics.length === 0) {
+        console.warn('[Report] No metrics found for the specified period');
+      }
 
       // Calculate summary metrics
       const totalInvestment = metrics?.reduce((sum, m) => sum + (m.investment || 0), 0) || 0;
@@ -160,15 +185,21 @@ export const useGenerateReport = () => {
 
       setReportData(report);
 
+      console.log('[Report] Report generated successfully:', {
+        campaigns: report.campaigns.length,
+        totalInvestment: report.summary.totalInvestment,
+        totalRevenue: report.summary.totalRevenue,
+      });
+
       toast({
-        title: "Sucesso",
-        description: "Relatório gerado com sucesso",
+        title: "✅ Relatório gerado",
+        description: `${report.campaigns.length} campanha(s) analisada(s)`,
       });
     } catch (error: any) {
-      console.error('Error generating report:', error);
+      console.error('[Report] Error generating report:', error);
       toast({
-        title: "Erro ao gerar relatório",
-        description: error.message,
+        title: "❌ Erro ao gerar relatório",
+        description: error.message || "Ocorreu um erro inesperado",
         variant: "destructive",
       });
     } finally {
