@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Edit, MessageSquare, Users } from 'lucide-react';
+import { Calendar, Clock, Edit, MessageSquare, Users, Trash2 } from 'lucide-react';
 import { format, isFuture, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Meeting } from '@/hooks/useMeetings';
@@ -12,9 +12,10 @@ interface UpcomingMeetingsProps {
   meetings: Meeting[];
   clients: Client[];
   onEdit: (meeting: Meeting) => void;
+  onDelete: (meeting: Meeting) => void;
 }
 
-export default function UpcomingMeetings({ meetings, clients, onEdit }: UpcomingMeetingsProps) {
+export default function UpcomingMeetings({ meetings, clients, onEdit, onDelete }: UpcomingMeetingsProps) {
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     return client?.name || 'Cliente';
@@ -80,13 +81,22 @@ export default function UpcomingMeetings({ meetings, clients, onEdit }: Upcoming
                       )}
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(meeting)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(meeting)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(meeting)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -133,13 +143,22 @@ export default function UpcomingMeetings({ meetings, clients, onEdit }: Upcoming
                       )}
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(meeting)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(meeting)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(meeting)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

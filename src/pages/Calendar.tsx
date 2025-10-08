@@ -5,6 +5,7 @@ import { useMeetings } from '@/hooks/useMeetings';
 import { useClients } from '@/hooks/useClients';
 import { useTasks } from '@/hooks/useTasks';
 import { useCreateMeeting } from '@/hooks/useCreateMeeting';
+import { useDeleteMeeting } from '@/hooks/useDeleteMeeting';
 import { useUpdateTask } from '@/hooks/useUpdateTask';
 import { useSyncGoogleCalendar } from '@/hooks/useSyncGoogleCalendar';
 import { toast } from '@/hooks/use-toast';
@@ -14,17 +15,29 @@ import OptimizationTasks from '@/components/calendar/OptimizationTasks';
 import MeetingForm from '@/components/calendar/MeetingForm';
 import { Meeting } from '@/hooks/useMeetings';
 import { MeetingFormData } from '@/lib/validations/meeting';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Calendar() {
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
 
   const { data: meetings = [], isLoading: meetingsLoading } = useMeetings();
   const { data: clients = [], isLoading: clientsLoading } = useClients();
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   
   const createMeeting = useCreateMeeting();
+  const deleteMeeting = useDeleteMeeting();
   const syncGoogleCalendar = useSyncGoogleCalendar();
   const updateTask = useUpdateTask();
 
@@ -70,6 +83,29 @@ export default function Calendar() {
       setSelectedDate(null);
     } catch (error: any) {
       console.error('Error saving meeting:', error);
+    }
+  };
+
+  const handleDeleteMeeting = (meeting: Meeting) => {
+    setMeetingToDelete(meeting);
+  };
+
+  const confirmDeleteMeeting = async () => {
+    if (!meetingToDelete) return;
+
+    try {
+      // Se estiver sincronizado com Google, deletar do Google Calendar também
+      if (meetingToDelete.google_event_id) {
+        await syncGoogleCalendar.mutateAsync({
+          meetingId: meetingToDelete.id,
+          action: 'delete',
+        });
+      }
+
+      await deleteMeeting.mutateAsync(meetingToDelete.id);
+      setMeetingToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting meeting:', error);
     }
   };
 
@@ -149,6 +185,7 @@ export default function Calendar() {
               meetings={meetings}
               clients={clients}
               onEdit={handleEditMeeting}
+              onDelete={handleDeleteMeeting}
             />
 
             <OptimizationTasks
@@ -171,6 +208,25 @@ export default function Calendar() {
         defaultValues={getDefaultMeetingValues()}
         isEditing={!!selectedMeeting}
       />
+
+      <AlertDialog open={!!meetingToDelete} onOpenChange={() => setMeetingToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir reunião</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a reunião "{meetingToDelete?.title}"? 
+              {meetingToDelete?.google_event_id && " Esta ação também removerá o evento do Google Calendar."}
+              {" Esta ação não pode ser desfeita."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteMeeting}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
