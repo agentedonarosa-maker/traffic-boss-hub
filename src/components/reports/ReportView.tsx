@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -46,19 +46,50 @@ interface ReportViewProps {
 }
 
 export default function ReportView({ data, onExport }: ReportViewProps) {
+  useEffect(() => {
+    console.log('[ReportView] Rendering with data:', {
+      hasClient: !!data?.client,
+      clientName: data?.client?.name,
+      hasPeriod: !!data?.period,
+      hasSummary: !!data?.summary,
+      campaignsCount: data?.campaigns?.length || 0,
+    });
+  }, [data]);
+
+  // Validate required data
+  if (!data || !data.client || !data.period || !data.summary) {
+    console.error('[ReportView] Invalid data structure:', data);
+    return (
+      <Card className="border-destructive">
+        <CardContent className="p-6">
+          <p className="text-destructive">Dados do relatório inválidos ou incompletos</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(value || 0);
   };
 
   const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('pt-BR').format(value);
+    return new Intl.NumberFormat('pt-BR').format(value || 0);
   };
 
   const formatPercentage = (value: number) => {
-    return `${value.toFixed(2)}%`;
+    return `${(value || 0).toFixed(2)}%`;
+  };
+
+  const formatSafeDate = (dateString: string, formatStr: string) => {
+    try {
+      return format(new Date(dateString), formatStr, { locale: ptBR });
+    } catch (error) {
+      console.error('[ReportView] Date formatting error:', error);
+      return dateString;
+    }
   };
 
   return (
@@ -73,8 +104,8 @@ export default function ReportView({ data, onExport }: ReportViewProps) {
                 {data.client.company && ` (${data.client.company})`}
               </CardTitle>
               <CardDescription>
-                Período: {format(new Date(data.period.start), "dd 'de' MMMM", { locale: ptBR })} até{' '}
-                {format(new Date(data.period.end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                Período: {formatSafeDate(data.period.start, "dd 'de' MMMM")} até{' '}
+                {formatSafeDate(data.period.end, "dd 'de' MMMM 'de' yyyy")}
               </CardDescription>
             </div>
             <Button onClick={onExport} variant="outline">

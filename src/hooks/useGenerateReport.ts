@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -49,7 +49,7 @@ export const useGenerateReport = () => {
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
 
-  const generateReport = async (params: ReportParams) => {
+  const generateReport = useCallback(async (params: ReportParams) => {
     if (!user) {
       toast({
         title: "Erro",
@@ -93,20 +93,28 @@ export const useGenerateReport = () => {
 
       console.log('[Report] Found campaigns:', campaigns?.length || 0);
 
+      const campaignIds = campaigns?.map(c => c.id) || [];
+      
       if (!campaigns || campaigns.length === 0) {
-        throw new Error('Nenhuma campanha encontrada para este cliente');
+        console.warn('[Report] No campaigns found, generating empty report');
       }
 
-      const campaignIds = campaigns?.map(c => c.id) || [];
-
       // Get metrics for these campaigns in the period
-      const { data: metrics, error: metricsError } = await supabase
-        .from('campaign_metrics')
-        .select('*')
-        .in('campaign_id', campaignIds)
-        .gte('date', params.startDate)
-        .lte('date', params.endDate)
-        .eq('user_id', user.id);
+      let metrics = [];
+      let metricsError = null;
+      
+      if (campaignIds.length > 0) {
+        const result = await supabase
+          .from('campaign_metrics')
+          .select('*')
+          .in('campaign_id', campaignIds)
+          .gte('date', params.startDate)
+          .lte('date', params.endDate)
+          .eq('user_id', user.id);
+        
+        metrics = result.data;
+        metricsError = result.error;
+      }
 
       if (metricsError) {
         console.error('[Report] Metrics error:', metricsError);
@@ -183,13 +191,15 @@ export const useGenerateReport = () => {
         campaigns: campaignMetrics,
       };
 
-      setReportData(report);
-
       console.log('[Report] Report generated successfully:', {
+        hasClient: !!client,
         campaigns: report.campaigns.length,
         totalInvestment: report.summary.totalInvestment,
         totalRevenue: report.summary.totalRevenue,
+        metricsCount: metrics?.length || 0,
       });
+
+      setReportData(report);
 
       toast({
         title: "✅ Relatório gerado",
@@ -205,7 +215,7 @@ export const useGenerateReport = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   return {
     generateReport,
