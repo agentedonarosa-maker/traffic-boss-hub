@@ -166,7 +166,33 @@ bun install
 
 ### 3. Configure as Variáveis de Ambiente
 
-O projeto está configurado para usar o Supabase. As credenciais estão integradas diretamente no código (não são necessárias variáveis de ambiente VITE_*).
+⚠️ **ATENÇÃO: Segurança de Credenciais**
+
+1. **Copie o arquivo de exemplo:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Preencha as credenciais:**
+   - As credenciais do Supabase estão disponíveis no [Dashboard do Supabase](https://supabase.com/dashboard/project/bdkdcwfmevyvzxjvmxgt/settings/api)
+   - **Nota Importante**: O arquivo `src/integrations/supabase/client.ts` já contém as credenciais públicas (ANON_KEY) hardcoded para facilitar o desenvolvimento
+
+3. **⚠️ NÃO COMMITE O ARQUIVO `.env`**
+   - O `.env` está protegido pelo `.gitignore`
+   - Nunca adicione credenciais sensíveis ao repositório Git
+   - Use apenas `.env.example` para documentar variáveis necessárias
+
+#### 🔒 Tipos de Credenciais
+
+| Tipo | Segurança | Uso | Observação |
+|------|-----------|-----|------------|
+| `ANON_KEY` / `PUBLISHABLE_KEY` | ✅ Pública | Frontend | Já hardcoded no código |
+| `SERVICE_ROLE_KEY` | 🔴 **SECRETA** | Backend/Edge Functions | **NUNCA expor no frontend** |
+| Tokens de integração (Meta/Google/TikTok) | 🔴 **SECRETOS** | Edge Functions | Armazenados criptografados no Supabase Vault |
+
+**Credenciais de integrações** são automaticamente armazenadas de forma criptografada no **Supabase Vault** quando você configura uma integração pela interface do sistema.
+
+📖 **Leia mais sobre segurança**: [DOCS/SECURITY.md](DOCS/SECURITY.md)
 
 ### 4. Inicie o Servidor de Desenvolvimento
 
