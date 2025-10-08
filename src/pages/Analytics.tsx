@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useClients } from "@/hooks/useClients";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useAdInsights } from "@/hooks/useAdInsights";
+import { useImportMetaInsights } from "@/hooks/useImportMetaInsights";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { BarChart3, Users, Smartphone, Clock, MapPin, TrendingUp, Eye, MousePointer, ShoppingCart, DollarSign, FileDown, Lightbulb, Target } from "lucide-react";
+import { BarChart3, Users, Smartphone, Clock, MapPin, TrendingUp, Eye, MousePointer, ShoppingCart, DollarSign, FileDown, Lightbulb, Target, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { generateReportPDF } from "@/lib/pdfExport";
@@ -17,6 +18,7 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3
 export default function Analytics() {
   const { data: clients, isLoading: loadingClients } = useClients();
   const { data: campaigns, isLoading: loadingCampaigns } = useCampaigns();
+  const { mutate: importInsights, isPending: isImporting } = useImportMetaInsights();
   
   const [selectedClient, setSelectedClient] = useState<string>("all");
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
@@ -281,13 +283,24 @@ export default function Analytics() {
             Análise granular de performance: demografia, dispositivos, horários e plataformas
           </p>
         </div>
-        {insights && insights.length > 0 && (
-          <Button onClick={handleExportPDF} variant="outline" className="gap-2 w-full sm:w-auto text-sm">
-            <FileDown className="w-4 h-4" />
-            <span className="hidden sm:inline">Exportar PDF</span>
-            <span className="sm:hidden">PDF</span>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={() => importInsights()} 
+            disabled={isImporting}
+            variant="default" 
+            className="gap-2 text-sm"
+          >
+            <Download className="w-4 h-4" />
+            {isImporting ? "Importando..." : "Importar Insights"}
           </Button>
-        )}
+          {insights && insights.length > 0 && (
+            <Button onClick={handleExportPDF} variant="outline" className="gap-2 text-sm">
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}
