@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { meetingSchema, type MeetingFormData } from '@/lib/validations/meeting';
@@ -8,19 +8,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useClients } from '@/hooks/useClients';
-import { Calendar } from 'lucide-react';
+import { useGoogleCalendarAuth } from '@/hooks/useGoogleCalendarAuth';
+import { Calendar, Video } from 'lucide-react';
 
 interface MeetingFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: MeetingFormData) => void;
+  onSubmit: (data: MeetingFormData & { syncWithGoogle?: boolean }) => void;
   defaultValues?: Partial<MeetingFormData>;
   isEditing?: boolean;
 }
 
 export default function MeetingForm({ open, onClose, onSubmit, defaultValues, isEditing }: MeetingFormProps) {
   const { data: clients = [] } = useClients();
+  const { isConnected: isGoogleConnected } = useGoogleCalendarAuth();
+  const [syncWithGoogle, setSyncWithGoogle] = useState(true);
   
   const {
     register,
@@ -45,7 +49,7 @@ export default function MeetingForm({ open, onClose, onSubmit, defaultValues, is
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit((data) => onSubmit({ ...data, syncWithGoogle }))} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Título *</Label>
             <Input
@@ -117,6 +121,27 @@ export default function MeetingForm({ open, onClose, onSubmit, defaultValues, is
               <p className="text-sm text-destructive">{errors.feedback.message}</p>
             )}
           </div>
+
+          {isGoogleConnected && (
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center gap-3">
+                <Video className="w-5 h-5 text-primary" />
+                <div>
+                  <Label htmlFor="sync-google" className="cursor-pointer font-medium">
+                    Sincronizar com Google Calendar
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Criar evento e adicionar Google Meet automaticamente
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="sync-google"
+                checked={syncWithGoogle}
+                onCheckedChange={setSyncWithGoogle}
+              />
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end pt-4">
             <Button type="button" variant="outline" onClick={onClose}>

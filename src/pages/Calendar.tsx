@@ -6,6 +6,7 @@ import { useClients } from '@/hooks/useClients';
 import { useTasks } from '@/hooks/useTasks';
 import { useCreateMeeting } from '@/hooks/useCreateMeeting';
 import { useUpdateTask } from '@/hooks/useUpdateTask';
+import { useSyncGoogleCalendar } from '@/hooks/useSyncGoogleCalendar';
 import { toast } from '@/hooks/use-toast';
 import CalendarView from '@/components/calendar/CalendarView';
 import UpcomingMeetings from '@/components/calendar/UpcomingMeetings';
@@ -24,6 +25,7 @@ export default function Calendar() {
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   
   const createMeeting = useCreateMeeting();
+  const syncGoogleCalendar = useSyncGoogleCalendar();
   const updateTask = useUpdateTask();
 
   const handleCreateMeeting = () => {
@@ -43,7 +45,7 @@ export default function Calendar() {
     setShowMeetingForm(true);
   };
 
-  const handleMeetingSubmit = async (data: MeetingFormData) => {
+  const handleMeetingSubmit = async (data: MeetingFormData & { syncWithGoogle?: boolean }) => {
     try {
       const meetingData = {
         title: data.title,
@@ -52,7 +54,17 @@ export default function Calendar() {
         description: data.description || null,
         feedback: data.feedback || null,
       };
-      await createMeeting.mutateAsync(meetingData);
+      
+      const meeting = await createMeeting.mutateAsync(meetingData);
+      
+      // Sincronizar com Google Calendar se solicitado
+      if (data.syncWithGoogle && meeting?.id) {
+        await syncGoogleCalendar.mutateAsync({
+          meetingId: meeting.id,
+          action: 'create',
+        });
+      }
+      
       setShowMeetingForm(false);
       setSelectedMeeting(null);
       setSelectedDate(null);

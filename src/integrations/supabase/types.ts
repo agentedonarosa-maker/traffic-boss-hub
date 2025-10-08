@@ -358,7 +358,11 @@ export type Database = {
           created_at: string | null
           description: string | null
           feedback: string | null
+          google_event_id: string | null
+          google_meet_link: string | null
           id: string
+          is_synced_with_google: boolean | null
+          last_synced_at: string | null
           meeting_date: string
           title: string
           user_id: string
@@ -368,7 +372,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           feedback?: string | null
+          google_event_id?: string | null
+          google_meet_link?: string | null
           id?: string
+          is_synced_with_google?: boolean | null
+          last_synced_at?: string | null
           meeting_date: string
           title: string
           user_id: string
@@ -378,7 +386,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           feedback?: string | null
+          google_event_id?: string | null
+          google_meet_link?: string | null
           id?: string
+          is_synced_with_google?: boolean | null
+          last_synced_at?: string | null
           meeting_date?: string
           title?: string
           user_id?: string
@@ -485,6 +497,128 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_google_tokens: {
+        Row: {
+          access_token: string | null
+          calendar_id: string | null
+          created_at: string | null
+          id: string
+          refresh_token: string
+          token_expiry: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          calendar_id?: string | null
+          created_at?: string | null
+          id?: string
+          refresh_token: string
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          calendar_id?: string | null
+          created_at?: string | null
+          id?: string
+          refresh_token?: string
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          attempt_number: number | null
+          created_at: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_code: number | null
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt_number?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_code?: number | null
+          status: string
+          webhook_id: string
+        }
+        Update: {
+          attempt_number?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          created_at: string | null
+          events: string[]
+          id: string
+          is_active: boolean | null
+          name: string
+          retry_count: number | null
+          secret: string
+          timeout_ms: number | null
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          events: string[]
+          id?: string
+          is_active?: boolean | null
+          name: string
+          retry_count?: number | null
+          secret: string
+          timeout_ms?: number | null
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          retry_count?: number | null
+          secret?: string
+          timeout_ms?: number | null
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -7,12 +7,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Settings as SettingsIcon, Plug, CheckCircle2, XCircle, Trash2, Download, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Settings as SettingsIcon, Plug, CheckCircle2, Trash2, Download, Loader2, Calendar, Webhook, Plus, Eye, TestTube, Edit } from "lucide-react";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useCreateIntegration } from "@/hooks/useCreateIntegration";
 import { useDeleteIntegration } from "@/hooks/useDeleteIntegration";
 import { useImportMetaCampaigns } from "@/hooks/useImportMetaCampaigns";
 import { useClients } from "@/hooks/useClients";
+import { useGoogleCalendarAuth } from "@/hooks/useGoogleCalendarAuth";
+import { useWebhooks } from "@/hooks/useWebhooks";
+import { useCreateWebhook } from "@/hooks/useCreateWebhook";
+import { useDeleteWebhook } from "@/hooks/useUpdateWebhook";
+import { useWebhookLogs } from "@/hooks/useWebhookLogs";
+import { useTestWebhook } from "@/hooks/useTestWebhook";
+import WebhookForm from "@/components/settings/WebhookForm";
+import type { WebhookFormData } from "@/lib/validations/webhook";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export default function Settings() {
   const { data: clients = [] } = useClients();
@@ -23,6 +35,18 @@ export default function Settings() {
   const importMetaCampaigns = useImportMetaCampaigns();
 
   const [integrationToDelete, setIntegrationToDelete] = useState<string | null>(null);
+
+  // Google Calendar
+  const { startAuth, disconnect, isConnected: isGoogleConnected, calendarEmail } = useGoogleCalendarAuth();
+
+  // Webhooks
+  const { data: webhooks = [] } = useWebhooks();
+  const createWebhook = useCreateWebhook();
+  const deleteWebhook = useDeleteWebhook();
+  const testWebhook = useTestWebhook();
+  const [showWebhookForm, setShowWebhookForm] = useState(false);
+  const [selectedWebhookForLogs, setSelectedWebhookForLogs] = useState<string | null>(null);
+  const { data: webhookLogs = [] } = useWebhookLogs(selectedWebhookForLogs);
 
   // Meta Ads Form
   const [metaAccessToken, setMetaAccessToken] = useState("");
@@ -113,6 +137,21 @@ export default function Settings() {
     }
   };
 
+  const handleWebhookSubmit = (data: WebhookFormData) => {
+    const webhookData = {
+      name: data.name,
+      url: data.url,
+      secret: data.secret,
+      events: data.events,
+      retry_count: data.retry_count,
+      timeout_ms: data.timeout_ms,
+    };
+    
+    createWebhook.mutate(webhookData, {
+      onSuccess: () => setShowWebhookForm(false),
+    });
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <div className="flex items-center gap-3">
@@ -146,28 +185,46 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {selectedClientId && (
-        <Tabs defaultValue="meta" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
-          <TabsTrigger value="meta" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-            <Plug className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Meta Ads</span>
-            <span className="sm:hidden">Meta</span>
-            {getIntegration('meta') && <CheckCircle2 className="w-3 h-3 text-success" />}
+      <Tabs defaultValue={selectedClientId ? "meta" : "google-calendar"} className="w-full">
+        <TabsList className="grid w-full grid-cols-5 h-auto">
+          {selectedClientId && (
+            <>
+              <TabsTrigger value="meta" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
+                <Plug className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">Meta Ads</span>
+                <span className="sm:hidden">Meta</span>
+                {getIntegration('meta') && <CheckCircle2 className="w-3 h-3 text-success" />}
+              </TabsTrigger>
+              <TabsTrigger value="google" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
+                <Plug className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">Google Ads</span>
+                <span className="sm:hidden">Google</span>
+                {getIntegration('google') && <CheckCircle2 className="w-3 h-3 text-success" />}
+              </TabsTrigger>
+              <TabsTrigger value="tiktok" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
+                <Plug className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">TikTok Ads</span>
+                <span className="sm:hidden">TikTok</span>
+                {getIntegration('tiktok') && <CheckCircle2 className="w-3 h-3 text-success" />}
+              </TabsTrigger>
+            </>
+          )}
+          <TabsTrigger value="google-calendar" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
+            <Calendar className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Google Calendar</span>
+            <span className="sm:hidden">Calendar</span>
+            {isGoogleConnected && <CheckCircle2 className="w-3 h-3 text-success" />}
           </TabsTrigger>
-          <TabsTrigger value="google" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-            <Plug className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Google Ads</span>
-            <span className="sm:hidden">Google</span>
-            {getIntegration('google') && <CheckCircle2 className="w-3 h-3 text-success" />}
-          </TabsTrigger>
-          <TabsTrigger value="tiktok" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-            <Plug className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">TikTok Ads</span>
-            <span className="sm:hidden">TikTok</span>
-            {getIntegration('tiktok') && <CheckCircle2 className="w-3 h-3 text-success" />}
+          <TabsTrigger value="webhooks" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
+            <Webhook className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Webhooks</span>
+            <span className="sm:hidden">Hooks</span>
+            {webhooks.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{webhooks.length}</Badge>}
           </TabsTrigger>
         </TabsList>
+
+        {selectedClientId && (
+          <>
 
         {/* Meta Ads Tab */}
         <TabsContent value="meta">
@@ -432,8 +489,154 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
+          </>
+        )}
+
+        {/* Google Calendar Tab */}
+        <TabsContent value="google-calendar">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Sincronização com Google Calendar</CardTitle>
+                  <CardDescription>
+                    Conecte sua conta do Google para sincronizar reuniões automaticamente e gerar links do Google Meet
+                  </CardDescription>
+                </div>
+                {isGoogleConnected && (
+                  <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    Conectado
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isGoogleConnected ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Sua conta está conectada
+                    </p>
+                    <Badge variant="secondary">{calendarEmail}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    As reuniões criadas serão automaticamente sincronizadas com o Google Calendar e incluirão links do Google Meet.
+                  </p>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => disconnect()}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Desconectar
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Ao conectar, você poderá:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                    <li>Sincronizar reuniões automaticamente</li>
+                    <li>Gerar links do Google Meet para todas as reuniões</li>
+                    <li>Atualizar eventos em tempo real</li>
+                  </ul>
+                  <Button onClick={() => startAuth()}>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Conectar Google Calendar
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Webhooks Tab */}
+        <TabsContent value="webhooks">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Webhooks</CardTitle>
+                  <CardDescription>
+                    Configure webhooks para enviar eventos para N8N, Evolution API ou outras integrações
+                  </CardDescription>
+                </div>
+                <Button onClick={() => setShowWebhookForm(true)} size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Webhook
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {webhooks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Webhook className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum webhook configurado. Crie um para começar.
+                    </p>
+                  </div>
+                ) : (
+                  webhooks.map((webhook) => (
+                    <div key={webhook.id} className="flex items-start justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold">{webhook.name}</h4>
+                          {webhook.is_active ? (
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                              Ativo
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-muted text-muted-foreground">
+                              Inativo
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2 break-all">{webhook.url}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {webhook.events.map(event => (
+                            <Badge key={event} variant="secondary" className="text-xs">
+                              {event}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => setSelectedWebhookForLogs(webhook.id)}
+                          title="Ver Logs"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => testWebhook.mutate(webhook.id)}
+                          title="Testar Webhook"
+                        >
+                          <TestTube className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => deleteWebhook.mutate(webhook.id)}
+                          title="Deletar"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
         </Tabs>
-      )}
 
       <AlertDialog open={!!integrationToDelete} onOpenChange={() => setIntegrationToDelete(null)}>
         <AlertDialogContent>
@@ -452,6 +655,78 @@ export default function Settings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Webhook Form Dialog */}
+      <WebhookForm
+        open={showWebhookForm}
+        onClose={() => setShowWebhookForm(false)}
+        onSubmit={handleWebhookSubmit}
+      />
+
+      {/* Webhook Logs Dialog */}
+      <Dialog open={!!selectedWebhookForLogs} onOpenChange={() => setSelectedWebhookForLogs(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Logs do Webhook</DialogTitle>
+            <DialogDescription>
+              Histórico de execuções e tentativas do webhook
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            {webhookLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Nenhum log encontrado
+              </p>
+            ) : (
+              webhookLogs.map((log) => (
+                <div 
+                  key={log.id} 
+                  className={cn(
+                    "p-4 border rounded-lg",
+                    log.status === 'success' && "border-success bg-success/5",
+                    log.status === 'failed' && "border-destructive bg-destructive/5",
+                    log.status === 'retrying' && "border-warning bg-warning/5"
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
+                        {log.status}
+                      </Badge>
+                      <Badge variant="outline">{log.event_type}</Badge>
+                      {log.response_code && (
+                        <Badge variant="secondary">HTTP {log.response_code}</Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      Tentativa {log.attempt_number}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}
+                  </p>
+                  {log.error_message && (
+                    <p className="text-sm text-destructive mt-2 font-mono">
+                      {log.error_message}
+                    </p>
+                  )}
+                  {log.response_body && (
+                    <details className="mt-2">
+                      <summary className="text-sm cursor-pointer text-muted-foreground hover:text-foreground">
+                        Ver resposta
+                      </summary>
+                      <pre className="text-xs bg-muted p-2 rounded mt-2 overflow-x-auto">
+                        {log.response_body}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
