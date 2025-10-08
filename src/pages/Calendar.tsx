@@ -4,8 +4,10 @@ import { Plus } from 'lucide-react';
 import { useMeetings } from '@/hooks/useMeetings';
 import { useClients } from '@/hooks/useClients';
 import { useTasks } from '@/hooks/useTasks';
+import { useCampaigns } from '@/hooks/useCampaigns';
 import { useCreateMeeting } from '@/hooks/useCreateMeeting';
 import { useDeleteMeeting } from '@/hooks/useDeleteMeeting';
+import { useCreateTask } from '@/hooks/useCreateTask';
 import { useUpdateTask } from '@/hooks/useUpdateTask';
 import { useSyncGoogleCalendar } from '@/hooks/useSyncGoogleCalendar';
 import { toast } from '@/hooks/use-toast';
@@ -13,8 +15,10 @@ import CalendarView from '@/components/calendar/CalendarView';
 import UpcomingMeetings from '@/components/calendar/UpcomingMeetings';
 import OptimizationTasks from '@/components/calendar/OptimizationTasks';
 import MeetingForm from '@/components/calendar/MeetingForm';
+import TaskForm from '@/components/calendar/TaskForm';
 import { Meeting } from '@/hooks/useMeetings';
 import { MeetingFormData } from '@/lib/validations/meeting';
+import { TaskFormData } from '@/lib/validations/task';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +32,7 @@ import {
 
 export default function Calendar() {
   const [showMeetingForm, setShowMeetingForm] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [meetingToDelete, setMeetingToDelete] = useState<Meeting | null>(null);
@@ -35,9 +40,11 @@ export default function Calendar() {
   const { data: meetings = [], isLoading: meetingsLoading } = useMeetings();
   const { data: clients = [], isLoading: clientsLoading } = useClients();
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
+  const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
   
   const createMeeting = useCreateMeeting();
   const deleteMeeting = useDeleteMeeting();
+  const createTask = useCreateTask();
   const syncGoogleCalendar = useSyncGoogleCalendar();
   const updateTask = useUpdateTask();
 
@@ -45,6 +52,10 @@ export default function Calendar() {
     setSelectedMeeting(null);
     setSelectedDate(null);
     setShowMeetingForm(true);
+  };
+
+  const handleCreateTask = () => {
+    setShowTaskForm(true);
   };
 
   const handleEditMeeting = (meeting: Meeting) => {
@@ -109,6 +120,23 @@ export default function Calendar() {
     }
   };
 
+  const handleTaskSubmit = async (data: TaskFormData) => {
+    try {
+      await createTask.mutateAsync({
+        title: data.title,
+        description: data.description || undefined,
+        client_id: data.client_id || undefined,
+        campaign_id: data.campaign_id || undefined,
+        due_date: data.due_date || undefined,
+        priority: data.priority,
+        status: data.status,
+      });
+      setShowTaskForm(false);
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+    }
+  };
+
   const handleToggleTask = async (taskId: string, newStatus: string) => {
     try {
       await updateTask.mutateAsync({
@@ -148,7 +176,7 @@ export default function Calendar() {
     return {};
   };
 
-  const isLoading = meetingsLoading || clientsLoading || tasksLoading;
+  const isLoading = meetingsLoading || clientsLoading || tasksLoading || campaignsLoading;
 
   return (
     <div className="p-6 space-y-6">
@@ -159,10 +187,16 @@ export default function Calendar() {
             Gerencie reuniões com clientes e tarefas de otimização
           </p>
         </div>
-        <Button onClick={handleCreateMeeting}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Reunião
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleCreateTask} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Tarefa
+          </Button>
+          <Button onClick={handleCreateMeeting}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Reunião
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -207,6 +241,14 @@ export default function Calendar() {
         onSubmit={handleMeetingSubmit}
         defaultValues={getDefaultMeetingValues()}
         isEditing={!!selectedMeeting}
+      />
+
+      <TaskForm
+        open={showTaskForm}
+        onClose={() => setShowTaskForm(false)}
+        onSubmit={handleTaskSubmit}
+        clients={clients}
+        campaigns={campaigns}
       />
 
       <AlertDialog open={!!meetingToDelete} onOpenChange={() => setMeetingToDelete(null)}>
