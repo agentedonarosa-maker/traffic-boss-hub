@@ -10,10 +10,6 @@ export interface Meeting {
   meeting_date: string;
   feedback: string | null;
   created_at: string;
-  google_event_id: string | null;
-  google_meet_link: string | null;
-  is_synced_with_google: boolean | null;
-  last_synced_at: string | null;
 }
 
 export const useMeetings = () => {

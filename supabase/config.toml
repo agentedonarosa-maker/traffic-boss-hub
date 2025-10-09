@@ -30,11 +30,5 @@ verify_jwt = false
 [functions.import-meta-campaigns]
 verify_jwt = true
 
-[functions.google-calendar-auth]
-verify_jwt = false
-
-[functions.sync-google-calendar]
-verify_jwt = true
-
 [functions.dispatch-webhook]
 verify_jwt = false

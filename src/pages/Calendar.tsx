@@ -9,7 +9,6 @@ import { useCreateMeeting } from '@/hooks/useCreateMeeting';
 import { useDeleteMeeting } from '@/hooks/useDeleteMeeting';
 import { useCreateTask } from '@/hooks/useCreateTask';
 import { useUpdateTask } from '@/hooks/useUpdateTask';
-import { useSyncGoogleCalendar } from '@/hooks/useSyncGoogleCalendar';
 import { toast } from '@/hooks/use-toast';
 import CalendarView from '@/components/calendar/CalendarView';
 import UpcomingMeetings from '@/components/calendar/UpcomingMeetings';
@@ -45,7 +44,6 @@ export default function Calendar() {
   const createMeeting = useCreateMeeting();
   const deleteMeeting = useDeleteMeeting();
   const createTask = useCreateTask();
-  const syncGoogleCalendar = useSyncGoogleCalendar();
   const updateTask = useUpdateTask();
 
   const handleCreateMeeting = () => {
@@ -69,7 +67,7 @@ export default function Calendar() {
     setShowMeetingForm(true);
   };
 
-  const handleMeetingSubmit = async (data: MeetingFormData & { syncWithGoogle?: boolean }) => {
+  const handleMeetingSubmit = async (data: MeetingFormData) => {
     try {
       const meetingData = {
         title: data.title,
@@ -79,15 +77,7 @@ export default function Calendar() {
         feedback: data.feedback || null,
       };
       
-      const meeting = await createMeeting.mutateAsync(meetingData);
-      
-      // Sincronizar com Google Calendar se solicitado
-      if (data.syncWithGoogle && meeting?.id) {
-        await syncGoogleCalendar.mutateAsync({
-          meetingId: meeting.id,
-          action: 'create',
-        });
-      }
+      await createMeeting.mutateAsync(meetingData);
       
       setShowMeetingForm(false);
       setSelectedMeeting(null);
@@ -105,14 +95,6 @@ export default function Calendar() {
     if (!meetingToDelete) return;
 
     try {
-      // Se estiver sincronizado com Google, deletar do Google Calendar também
-      if (meetingToDelete.google_event_id) {
-        await syncGoogleCalendar.mutateAsync({
-          meetingId: meetingToDelete.id,
-          action: 'delete',
-        });
-      }
-
       await deleteMeeting.mutateAsync(meetingToDelete.id);
       setMeetingToDelete(null);
     } catch (error: any) {
@@ -256,9 +238,7 @@ export default function Calendar() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir reunião</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a reunião "{meetingToDelete?.title}"? 
-              {meetingToDelete?.google_event_id && " Esta ação também removerá o evento do Google Calendar."}
-              {" Esta ação não pode ser desfeita."}
+              Tem certeza que deseja excluir a reunião "{meetingToDelete?.title}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

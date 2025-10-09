@@ -14,7 +14,6 @@ import { useCreateIntegration } from "@/hooks/useCreateIntegration";
 import { useDeleteIntegration } from "@/hooks/useDeleteIntegration";
 import { useImportMetaCampaigns } from "@/hooks/useImportMetaCampaigns";
 import { useClients } from "@/hooks/useClients";
-import { useGoogleCalendarAuth } from "@/hooks/useGoogleCalendarAuth";
 import { useWebhooks } from "@/hooks/useWebhooks";
 import { useCreateWebhook } from "@/hooks/useCreateWebhook";
 import { useDeleteWebhook } from "@/hooks/useUpdateWebhook";
@@ -35,9 +34,6 @@ export default function Settings() {
   const importMetaCampaigns = useImportMetaCampaigns();
 
   const [integrationToDelete, setIntegrationToDelete] = useState<string | null>(null);
-
-  // Google Calendar
-  const { startAuth, disconnect, isConnected: isGoogleConnected, calendarEmail } = useGoogleCalendarAuth();
 
   // Webhooks
   const { data: webhooks = [] } = useWebhooks();
@@ -185,8 +181,8 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue={selectedClientId ? "meta" : "google-calendar"} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 h-auto">
+      <Tabs defaultValue={selectedClientId ? "meta" : "webhooks"} className="w-full">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
           {selectedClientId && (
             <>
               <TabsTrigger value="meta" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
@@ -209,12 +205,6 @@ export default function Settings() {
               </TabsTrigger>
             </>
           )}
-          <TabsTrigger value="google-calendar" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-            <Calendar className="w-3 h-3 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Google Calendar</span>
-            <span className="sm:hidden">Calendar</span>
-            {isGoogleConnected && <CheckCircle2 className="w-3 h-3 text-success" />}
-          </TabsTrigger>
           <TabsTrigger value="webhooks" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
             <Webhook className="w-3 h-3 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Webhooks</span>
@@ -491,65 +481,6 @@ export default function Settings() {
         </TabsContent>
           </>
         )}
-
-        {/* Google Calendar Tab */}
-        <TabsContent value="google-calendar">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Sincronização com Google Calendar</CardTitle>
-                  <CardDescription>
-                    Conecte sua conta do Google para sincronizar reuniões automaticamente e gerar links do Google Meet
-                  </CardDescription>
-                </div>
-                {isGoogleConnected && (
-                  <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Conectado
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isGoogleConnected ? (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Sua conta está conectada
-                    </p>
-                    <Badge variant="secondary">{calendarEmail}</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    As reuniões criadas serão automaticamente sincronizadas com o Google Calendar e incluirão links do Google Meet.
-                  </p>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => disconnect()}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Desconectar
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Ao conectar, você poderá:
-                  </p>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                    <li>Sincronizar reuniões automaticamente</li>
-                    <li>Gerar links do Google Meet para todas as reuniões</li>
-                    <li>Atualizar eventos em tempo real</li>
-                  </ul>
-                  <Button onClick={() => startAuth()}>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Conectar Google Calendar
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Webhooks Tab */}
         <TabsContent value="webhooks">
