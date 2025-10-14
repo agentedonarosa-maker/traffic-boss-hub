@@ -9,6 +9,7 @@ import {
   Menu,
   ClipboardCheck,
   TrendingUp,
+  LineChart,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -29,7 +30,7 @@ const navigationItems = [
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Campanhas", url: "/campaigns", icon: Target },
   { title: "Relatórios", url: "/reports", icon: FileText },
-  // { title: "Analytics", url: "/analytics", icon: TrendingUp },
+  { title: "Insights", url: "/insights", icon: LineChart },
   { title: "Agenda", url: "/calendar", icon: Calendar },
   { title: "Onboarding", url: "/onboarding", icon: ClipboardCheck },
   { title: "Configurações", url: "/settings", icon: Settings },

@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Campaigns from "./pages/Campaigns";
 import Reports from "./pages/Reports";
+import Insights from "./pages/Insights";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="clients" element={<Clients />} />
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="insights" element={<Insights />} />
               <Route path="calendar" element={<Calendar />} />
               {/* <Route path="analytics" element={<Analytics />} /> */}
               <Route path="onboarding" element={<Onboarding />} />
