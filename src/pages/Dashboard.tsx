@@ -1,5 +1,19 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Table,
   TableBody,
@@ -20,7 +34,12 @@ import {
   Plus,
   FileText,
   Loader2,
+  CalendarIcon,
+  Filter,
 } from "lucide-react";
+import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useCampaigns } from "@/hooks/useCampaigns";
@@ -31,7 +50,39 @@ import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: dashboardMetrics, isLoading: isLoadingMetrics } = useDashboardMetrics();
+  const [dateFilter, setDateFilter] = useState<"7days" | "30days" | "month" | "custom">("30days");
+  const [customStartDate, setCustomStartDate] = useState<Date>();
+  const [customEndDate, setCustomEndDate] = useState<Date>();
+
+  const getDateRange = () => {
+    const now = new Date();
+    switch (dateFilter) {
+      case "7days":
+        return {
+          startDate: format(subDays(now, 7), "yyyy-MM-dd"),
+          endDate: format(now, "yyyy-MM-dd"),
+        };
+      case "30days":
+        return {
+          startDate: format(subDays(now, 30), "yyyy-MM-dd"),
+          endDate: format(now, "yyyy-MM-dd"),
+        };
+      case "month":
+        return {
+          startDate: format(startOfMonth(now), "yyyy-MM-dd"),
+          endDate: format(endOfMonth(now), "yyyy-MM-dd"),
+        };
+      case "custom":
+        return {
+          startDate: customStartDate ? format(customStartDate, "yyyy-MM-dd") : undefined,
+          endDate: customEndDate ? format(customEndDate, "yyyy-MM-dd") : undefined,
+        };
+      default:
+        return {};
+    }
+  };
+
+  const { data: dashboardMetrics, isLoading: isLoadingMetrics } = useDashboardMetrics(getDateRange());
   const { data: campaigns = [] } = useCampaigns();
   const { data: allMetrics = [] } = useCampaignMetrics();
   const { data: clients = [] } = useClients();
@@ -82,11 +133,81 @@ export default function Dashboard() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">
-          Visão geral do desempenho das suas campanhas
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">
+            Visão geral do desempenho das suas campanhas
+          </p>
+        </div>
+        
+        <Card className="p-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground hidden sm:block" />
+            <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+              <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7days">Últimos 7 dias</SelectItem>
+                <SelectItem value="30days">Últimos 30 dias</SelectItem>
+                <SelectItem value="month">Mês atual</SelectItem>
+                <SelectItem value="custom">Período customizado</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {dateFilter === "custom" && (
+              <div className="flex gap-2 flex-col sm:flex-row">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[140px] justify-start text-left font-normal h-9 text-xs",
+                        !customStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3 w-3" />
+                      {customStartDate ? format(customStartDate, "dd/MM/yy") : "Início"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customStartDate}
+                      onSelect={setCustomStartDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[140px] justify-start text-left font-normal h-9 text-xs",
+                        !customEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3 w-3" />
+                      {customEndDate ? format(customEndDate, "dd/MM/yy") : "Fim"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customEndDate}
+                      onSelect={setCustomEndDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
@@ -235,7 +356,7 @@ export default function Dashboard() {
               onClick={() => navigate("/campaigns")}
             >
               <Target className="w-4 h-4 mr-2" />
-              Nova Campanha
+              Ver Campanhas
             </Button>
             <Button 
               variant="outline"

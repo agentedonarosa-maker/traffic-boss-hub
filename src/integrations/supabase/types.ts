@@ -259,6 +259,54 @@ export type Database = {
           },
         ]
       }
+      client_payments: {
+        Row: {
+          client_id: string
+          contract_value: number
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_date: string | null
+          payment_code: string | null
+          payment_frequency: string
+          payment_method: string
+          payment_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          contract_value: number
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_code?: string | null
+          payment_frequency: string
+          payment_method: string
+          payment_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          contract_value?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_code?: string | null
+          payment_frequency?: string
+          payment_method?: string
+          payment_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           company: string | null

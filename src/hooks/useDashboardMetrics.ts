@@ -15,11 +15,16 @@ interface DashboardMetrics {
   avgCtr: number;
 }
 
-export const useDashboardMetrics = () => {
+interface DateFilter {
+  startDate?: string;
+  endDate?: string;
+}
+
+export const useDashboardMetrics = (dateFilter?: DateFilter) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["dashboard_metrics", user?.id],
+    queryKey: ["dashboard_metrics", user?.id, dateFilter],
     queryFn: async () => {
       if (!user) throw new Error("Usuário não autenticado");
 
@@ -36,11 +41,20 @@ export const useDashboardMetrics = () => {
         .eq("user_id", user.id)
         .eq("status", "active");
 
-      // Get metrics aggregations
-      const { data: metrics } = await supabase
+      // Get metrics aggregations with date filter
+      let metricsQuery = supabase
         .from("campaign_metrics")
         .select("*")
         .eq("user_id", user.id);
+      
+      if (dateFilter?.startDate) {
+        metricsQuery = metricsQuery.gte("date", dateFilter.startDate);
+      }
+      if (dateFilter?.endDate) {
+        metricsQuery = metricsQuery.lte("date", dateFilter.endDate);
+      }
+
+      const { data: metrics } = await metricsQuery;
 
       const totalInvestment = metrics?.reduce((sum, m) => sum + (m.investment || 0), 0) || 0;
       const totalRevenue = metrics?.reduce((sum, m) => sum + (m.revenue || 0), 0) || 0;

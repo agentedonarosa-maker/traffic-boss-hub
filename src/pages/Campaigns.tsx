@@ -34,7 +34,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Plus,
   Search,
   Eye,
   Edit,
@@ -54,7 +53,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { useCampaigns } from "@/hooks/useCampaigns";
-import { useCreateCampaign } from "@/hooks/useCreateCampaign";
 import { useUpdateCampaign } from "@/hooks/useUpdateCampaign";
 import { useDeleteCampaign } from "@/hooks/useDeleteCampaign";
 import { useCampaignMetrics } from "@/hooks/useCampaignMetrics";
@@ -65,7 +63,6 @@ import { ResponsiveTable } from "@/components/ui/responsive-table";
 import type { Campaign } from "@/hooks/useCampaigns";
 export default function Campaigns() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -76,7 +73,6 @@ export default function Campaigns() {
   const { data: campaigns = [], isLoading } = useCampaigns();
   const { data: clients = [] } = useClients();
   const { data: allMetrics = [] } = useCampaignMetrics();
-  const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
   const deleteCampaign = useDeleteCampaign();
 
@@ -167,26 +163,6 @@ export default function Campaigns() {
     );
   };
 
-  const handleCreateCampaign = (data: CampaignFormData) => {
-    createCampaign.mutate(
-      {
-        name: data.name,
-        client_id: data.client_id,
-        platform: data.platform,
-        objective: data.objective,
-        budget: data.budget ?? undefined,
-        start_date: data.start_date ?? undefined,
-        end_date: data.end_date ?? undefined,
-        status: data.status,
-      },
-      {
-        onSuccess: () => {
-          setIsCreateDialogOpen(false);
-        },
-      }
-    );
-  };
-
   const handleUpdateCampaign = (data: CampaignFormData) => {
     if (!selectedCampaign) return;
     updateCampaign.mutate(
@@ -222,34 +198,19 @@ export default function Campaigns() {
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="space-y-3">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Campanhas</h1>
           <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-1">
-            Monitore e gerencie suas campanhas de tráfego pago
+            Monitore suas campanhas sincronizadas automaticamente
           </p>
         </div>
-
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <Button 
-            className="bg-gradient-primary w-full sm:w-auto text-sm"
-            onClick={() => setIsCreateDialogOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Nova Campanha</span>
-            <span className="sm:hidden">Nova</span>
-          </Button>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Criar Nova Campanha</DialogTitle>
-            </DialogHeader>
-            <CampaignForm
-              onSubmit={handleCreateCampaign}
-              onCancel={() => setIsCreateDialogOpen(false)}
-              isLoading={createCampaign.isPending}
-            />
-          </DialogContent>
-        </Dialog>
+        
+        <Card className="bg-primary/5 border-primary/20 p-3">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            💡 <strong>Sincronização Automática:</strong> As campanhas são importadas automaticamente das suas integrações (Meta Ads, Google Ads, TikTok Ads). Configure suas integrações na página de Configurações.
+          </p>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">

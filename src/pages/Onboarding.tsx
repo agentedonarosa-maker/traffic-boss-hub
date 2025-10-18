@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useClients } from "@/hooks/useClients";
 import { useSendContract } from "@/hooks/useSendContract";
+import { usePayments } from "@/hooks/usePayments";
+import { usePaymentMetrics } from "@/hooks/usePaymentMetrics";
+import { useUpdatePayment } from "@/hooks/useUpdatePayment";
+import { useDeletePayment } from "@/hooks/useDeletePayment";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +12,30 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Send, Loader2, CheckCircle, BookOpen } from "lucide-react";
+import { FileText, Send, Loader2, CheckCircle, BookOpen, DollarSign, AlertCircle, Clock, Trash2, Check } from "lucide-react";
+import { PaymentForm } from "@/components/onboarding/PaymentForm";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const DEFAULT_CONTRACT = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE GESTÃO DE TRÁFEGO PAGO
 
@@ -62,11 +88,16 @@ CONTRATANTE                              CONTRATADA`;
 export default function Onboarding() {
   const { toast } = useToast();
   const { data: clients, isLoading: clientsLoading } = useClients();
+  const { data: payments = [] } = usePayments();
+  const { data: paymentMetrics } = usePaymentMetrics();
   const sendContract = useSendContract();
+  const updatePayment = useUpdatePayment();
+  const deletePayment = useDeletePayment();
 
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [managerName, setManagerName] = useState("");
   const [contractContent, setContractContent] = useState(DEFAULT_CONTRACT);
+  const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
 
   const handleSendContract = async () => {
     if (!selectedClient || !managerName) {
@@ -101,7 +132,6 @@ export default function Onboarding() {
         description: `Email enviado para ${client.contact}`,
       });
 
-      // Reset form
       setSelectedClient("");
       setManagerName("");
       setContractContent(DEFAULT_CONTRACT);
@@ -113,6 +143,47 @@ export default function Onboarding() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleMarkAsPaid = async (paymentId: string) => {
+    await updatePayment.mutateAsync({
+      id: paymentId,
+      payment_status: "paid",
+      paid_date: format(new Date(), "yyyy-MM-dd"),
+    });
+  };
+
+  const handleDeletePayment = async () => {
+    if (!paymentToDelete) return;
+    await deletePayment.mutateAsync(paymentToDelete);
+    setPaymentToDelete(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      pending: { label: "Pendente", className: "bg-warning/10 text-warning" },
+      paid: { label: "Pago", className: "bg-success/10 text-success" },
+      overdue: { label: "Atrasado", className: "bg-destructive/10 text-destructive" },
+      cancelled: { label: "Cancelado", className: "bg-muted text-muted-foreground" },
+    };
+    const statusInfo = statusMap[status] || statusMap.pending;
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.className}`}>
+        {statusInfo.label}
+      </span>
+    );
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
+  const getClientName = (clientId: string) => {
+    const client = clients?.find(c => c.id === clientId);
+    return client?.name || "Cliente";
   };
 
   return (
@@ -127,10 +198,14 @@ export default function Onboarding() {
       </div>
 
       <Tabs defaultValue="contract" className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
           <TabsTrigger value="contract" className="gap-2">
             <FileText className="w-4 h-4" />
             Contrato
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="gap-2">
+            <DollarSign className="w-4 h-4" />
+            Pagamentos
           </TabsTrigger>
           <TabsTrigger value="guide" className="gap-2">
             <BookOpen className="w-4 h-4" />
@@ -228,6 +303,146 @@ export default function Onboarding() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="payments" className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <MetricCard
+              title="Recebido no Mês"
+              value={formatCurrency(paymentMetrics?.totalReceivedThisMonth || 0)}
+              icon={<DollarSign className="w-4 h-4" />}
+              variant="success"
+            />
+            <MetricCard
+              title="Pendente"
+              value={formatCurrency(paymentMetrics?.totalPending || 0)}
+              icon={<Clock className="w-4 h-4" />}
+              variant="warning"
+            />
+            <MetricCard
+              title="Atrasado"
+              value={formatCurrency(paymentMetrics?.totalOverdue || 0)}
+              icon={<AlertCircle className="w-4 h-4" />}
+              variant="warning"
+            />
+            <MetricCard
+              title="Próximos 7 dias"
+              value={paymentMetrics?.upcomingPayments || 0}
+              icon={<Clock className="w-4 h-4" />}
+            />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                Novo Pagamento
+              </CardTitle>
+              <CardDescription>
+                Registre um novo pagamento ou contrato com cliente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PaymentForm />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Pagamentos Registrados</CardTitle>
+              <CardDescription>
+                Histórico de contratos e pagamentos dos clientes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {payments.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum pagamento registrado ainda.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Cliente</TableHead>
+                        <TableHead className="text-xs">Valor</TableHead>
+                        <TableHead className="text-xs">Frequência</TableHead>
+                        <TableHead className="text-xs">Vencimento</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                        <TableHead className="text-xs">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payments.map((payment: any) => (
+                        <TableRow key={payment.id}>
+                          <TableCell className="text-xs font-medium">
+                            {getClientName(payment.client_id)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {formatCurrency(payment.contract_value)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {payment.payment_frequency === "monthly" && "Mensal"}
+                            {payment.payment_frequency === "quarterly" && "Trimestral"}
+                            {payment.payment_frequency === "annual" && "Anual"}
+                            {payment.payment_frequency === "one_time" && "Único"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {format(new Date(payment.due_date), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {getStatusBadge(payment.payment_status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {payment.payment_status === "pending" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleMarkAsPaid(payment.id)}
+                                  className="h-7 text-xs"
+                                >
+                                  <Check className="w-3 h-3 mr-1" />
+                                  Marcar Pago
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setPaymentToDelete(payment.id)}
+                                className="h-7 text-xs text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <AlertDialog open={!!paymentToDelete} onOpenChange={() => setPaymentToDelete(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir Pagamento</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir este pagamento? Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeletePayment}>
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TabsContent>
 
         <TabsContent value="guide" className="space-y-4 md:space-y-6">
