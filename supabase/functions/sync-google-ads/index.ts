@@ -118,9 +118,11 @@ Deno.serve(async (req: Request) => {
         const dateStart = sevenDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
         const dateEnd = today.toISOString().split('T')[0].replace(/-/g, '');
 
-        // 2. Chamar Google Ads API usando GoogleAdsService.SearchStream
+        // 2. Chamar Google Ads API usando GoogleAdsService.SearchStream - POR CAMPANHA
         const query = `
           SELECT
+            campaign.id,
+            campaign.name,
             segments.date,
             metrics.impressions,
             metrics.clicks,
@@ -163,8 +165,16 @@ Deno.serve(async (req: Request) => {
           continue;
         }
 
-        // Processar e salvar métricas
+        // Processar e salvar métricas POR CAMPANHA
         for (const row of adsData.results) {
+          const campaignName = row.campaign?.name;
+          const matchedCampaign = campaigns.find(c => c.name === campaignName);
+          
+          if (!matchedCampaign) {
+            console.log(`Campanha "${campaignName}" da API não encontrada no banco, ignorando...`);
+            continue;
+          }
+          
           const date = row.segments?.date;
           const impressions = parseInt(row.metrics?.impressions || "0");
           const clicks = parseInt(row.metrics?.clicks || "0");
@@ -179,30 +189,30 @@ Deno.serve(async (req: Request) => {
           const cpl = leads > 0 ? investment / leads : 0;
           const roas = investment > 0 ? revenue / investment : 0;
 
-          // Salvar métrica para cada campanha
-          for (const campaign of campaigns) {
-            const { error: metricError } = await supabaseAdmin
-              .from("campaign_metrics")
-              .upsert({
-                campaign_id: campaign.id,
-                user_id: integration.user_id,
-                date: date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"), // formato YYYYMMDD -> YYYY-MM-DD
-                impressions,
-                clicks,
-                investment,
-                leads,
-                sales,
-                revenue,
-                ctr,
-                cpl,
-                roas,
-              }, {
-                onConflict: "campaign_id,date",
-              });
+          // Salvar métrica APENAS para a campanha específica retornada pela API
+          const { error: metricError } = await supabaseAdmin
+            .from("campaign_metrics")
+            .upsert({
+              campaign_id: matchedCampaign.id,
+              user_id: integration.user_id,
+              date: date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"), // formato YYYYMMDD -> YYYY-MM-DD
+              impressions,
+              clicks,
+              investment,
+              leads,
+              sales,
+              revenue,
+              ctr,
+              cpl,
+              roas,
+            }, {
+              onConflict: "campaign_id,date",
+            });
 
-            if (metricError) {
-              console.error(`Erro ao salvar métrica:`, metricError);
-            }
+          if (metricError) {
+            console.error(`Erro ao salvar métrica para campanha ${matchedCampaign.name}:`, metricError);
+          } else {
+            console.log(`✓ Métrica salva para campanha ${matchedCampaign.name} na data ${date}`);
           }
         }
 

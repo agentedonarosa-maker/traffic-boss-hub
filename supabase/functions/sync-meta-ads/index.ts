@@ -111,14 +111,14 @@ Deno.serve(async (req: Request) => {
         const dateStart = sevenDaysAgo.toISOString().split('T')[0];
         const dateEnd = today.toISOString().split('T')[0];
 
-        // Chamar API do Meta Ads (Graph API)
+        // Chamar API do Meta Ads (Graph API) - BUSCAR POR CAMPANHA
         const metaApiUrl = `https://graph.facebook.com/v18.0/${adAccountId}/insights`;
         const params = new URLSearchParams({
           access_token: credentials.access_token,
           time_range: JSON.stringify({ since: dateStart, until: dateEnd }),
           time_increment: "1", // diário
-          level: "account",
-          fields: "impressions,clicks,spend,actions,action_values",
+          level: "campaign", // MUDANÇA: de "account" para "campaign"
+          fields: "campaign_id,campaign_name,impressions,clicks,spend,actions,action_values",
         });
 
         console.log(`Sincronizando Meta Ads para integração ${integration.id}...`);
@@ -143,22 +143,31 @@ Deno.serve(async (req: Request) => {
           continue;
         }
 
-        // Processar e salvar métricas
-        for (const insight of metaData.data as MetaInsight[]) {
+        // Processar e salvar métricas POR CAMPANHA
+        for (const insight of metaData.data as any[]) {
+          // Buscar campanha no banco pelo nome retornado pela API
+          const campaignName = insight.campaign_name;
+          const matchedCampaign = campaigns.find(c => c.name === campaignName);
+          
+          if (!matchedCampaign) {
+            console.log(`Campanha "${campaignName}" da API não encontrada no banco, ignorando...`);
+            continue;
+          }
+          
           // Extrair leads e sales das actions
           let leads = 0;
           let sales = 0;
           let revenue = 0;
 
           if (insight.actions) {
-            const leadAction = insight.actions.find(a => a.action_type === "lead");
-            const purchaseAction = insight.actions.find(a => a.action_type === "purchase");
+            const leadAction = insight.actions.find((a: any) => a.action_type === "lead");
+            const purchaseAction = insight.actions.find((a: any) => a.action_type === "purchase");
             leads = leadAction ? parseInt(leadAction.value) : 0;
             sales = purchaseAction ? parseInt(purchaseAction.value) : 0;
           }
 
           if (insight.action_values) {
-            const purchaseValue = insight.action_values.find(a => a.action_type === "purchase");
+            const purchaseValue = insight.action_values.find((a: any) => a.action_type === "purchase");
             revenue = purchaseValue ? parseFloat(purchaseValue.value) : 0;
           }
 
@@ -171,30 +180,30 @@ Deno.serve(async (req: Request) => {
           const cpl = leads > 0 ? investment / leads : 0;
           const roas = investment > 0 ? revenue / investment : 0;
 
-          // Salvar métrica para cada campanha do cliente
-          for (const campaign of campaigns) {
-            const { error: metricError } = await supabaseAdmin
-              .from("campaign_metrics")
-              .upsert({
-                campaign_id: campaign.id,
-                user_id: integration.user_id,
-                date: insight.date_start,
-                impressions,
-                clicks,
-                investment,
-                leads,
-                sales,
-                revenue,
-                ctr,
-                cpl,
-                roas,
-              }, {
-                onConflict: "campaign_id,date",
-              });
+          // Salvar métrica APENAS para a campanha específica retornada pela API
+          const { error: metricError } = await supabaseAdmin
+            .from("campaign_metrics")
+            .upsert({
+              campaign_id: matchedCampaign.id,
+              user_id: integration.user_id,
+              date: insight.date_start,
+              impressions,
+              clicks,
+              investment,
+              leads,
+              sales,
+              revenue,
+              ctr,
+              cpl,
+              roas,
+            }, {
+              onConflict: "campaign_id,date",
+            });
 
-            if (metricError) {
-              console.error(`Erro ao salvar métrica:`, metricError);
-            }
+          if (metricError) {
+            console.error(`Erro ao salvar métrica para campanha ${matchedCampaign.name}:`, metricError);
+          } else {
+            console.log(`✓ Métrica salva para campanha ${matchedCampaign.name} na data ${insight.date_start}`);
           }
         }
 

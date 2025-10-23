@@ -101,8 +101,8 @@ Deno.serve(async (req: Request) => {
           advertiser_id: credentials.advertiser_id,
           service_type: "AUCTION",
           report_type: "BASIC",
-          data_level: "AUCTION_ADVERTISER",
-          dimensions: ["stat_time_day"],
+          data_level: "AUCTION_CAMPAIGN", // MUDANÇA: de "AUCTION_ADVERTISER" para "AUCTION_CAMPAIGN"
+          dimensions: ["stat_time_day", "campaign_id"], // MUDANÇA: adicionar "campaign_id"
           metrics: [
             "impressions",
             "clicks",
@@ -154,8 +154,22 @@ Deno.serve(async (req: Request) => {
           continue;
         }
 
-        // Processar e salvar métricas
+        // Processar e salvar métricas POR CAMPANHA
         for (const row of tiktokData.data.list) {
+          // TikTok retorna campaign_id, buscar campanha correspondente
+          const apiCampaignId = row.dimensions?.campaign_id;
+          
+          // Tentar match por nome (assumindo que o ID da API pode não coincidir)
+          // Se a API retornar o nome, use-o; caso contrário, busque pelo ID
+          const matchedCampaign = campaigns.find(c => 
+            c.name.includes(apiCampaignId) || apiCampaignId.includes(c.name)
+          );
+          
+          if (!matchedCampaign) {
+            console.log(`Campanha TikTok ID "${apiCampaignId}" não encontrada no banco, ignorando...`);
+            continue;
+          }
+          
           const date = row.dimensions?.stat_time_day;
           const impressions = parseInt(row.metrics?.impressions || "0");
           const clicks = parseInt(row.metrics?.clicks || "0");
@@ -170,30 +184,30 @@ Deno.serve(async (req: Request) => {
           const cpl = leads > 0 ? investment / leads : 0;
           const roas = investment > 0 ? revenue / investment : 0;
 
-          // Salvar métrica para cada campanha
-          for (const campaign of campaigns) {
-            const { error: metricError } = await supabaseAdmin
-              .from("campaign_metrics")
-              .upsert({
-                campaign_id: campaign.id,
-                user_id: integration.user_id,
-                date,
-                impressions,
-                clicks,
-                investment,
-                leads,
-                sales,
-                revenue,
-                ctr,
-                cpl,
-                roas,
-              }, {
-                onConflict: "campaign_id,date",
-              });
+          // Salvar métrica APENAS para a campanha específica retornada pela API
+          const { error: metricError } = await supabaseAdmin
+            .from("campaign_metrics")
+            .upsert({
+              campaign_id: matchedCampaign.id,
+              user_id: integration.user_id,
+              date,
+              impressions,
+              clicks,
+              investment,
+              leads,
+              sales,
+              revenue,
+              ctr,
+              cpl,
+              roas,
+            }, {
+              onConflict: "campaign_id,date",
+            });
 
-            if (metricError) {
-              console.error(`Erro ao salvar métrica:`, metricError);
-            }
+          if (metricError) {
+            console.error(`Erro ao salvar métrica para campanha ${matchedCampaign.name}:`, metricError);
+          } else {
+            console.log(`✓ Métrica salva para campanha ${matchedCampaign.name} na data ${date}`);
           }
         }
 
