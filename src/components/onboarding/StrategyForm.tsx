@@ -20,12 +20,14 @@ import { PersonaBuilder } from "./PersonaBuilder";
 import { FunnelStrategy } from "./FunnelStrategy";
 import { ChannelPlanning } from "./ChannelPlanning";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileDown, Trash2, Plus, Edit, X } from "lucide-react";
+import { FileDown, Trash2, Plus, Edit, X, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const StrategyForm = () => {
-  const { data: clients } = useClients();
-  const { data: briefings } = useBriefings();
-  const { data: plans } = useStrategicPlans();
+  const { data: clients, isLoading: clientsLoading, isError: clientsError } = useClients();
+  const { data: briefings, isLoading: briefingsLoading, isError: briefingsError } = useBriefings();
+  const { data: plans, isLoading: plansLoading, isError: plansError } = useStrategicPlans();
   const createPlan = useCreateStrategicPlan();
   const updatePlan = useUpdateStrategicPlan();
   const deletePlan = useDeleteStrategicPlan();
@@ -119,14 +121,53 @@ export const StrategyForm = () => {
     return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
   };
 
+  if (plansLoading || clientsLoading || briefingsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Planos Estratégicos</h2>
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (plansError || clientsError || briefingsError) {
+    return (
+      <div className="space-y-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar dados. Tente recarregar a página.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Planejamento Estratégico</h2>
-          <p className="text-muted-foreground">Gerencie seus planejamentos estratégicos</p>
+          <h2 className="text-2xl font-bold">Planos Estratégicos</h2>
+          <p className="text-muted-foreground">Gerencie os planos estratégicos dos seus clientes</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => setShowForm(!showForm)} disabled={clientsLoading}>
           <Plus className="h-4 w-4 mr-2" />
           {showForm ? "Ver Lista" : "Novo Planejamento"}
         </Button>
@@ -134,7 +175,18 @@ export const StrategyForm = () => {
 
       {!showForm ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {plans?.map((plan) => {
+          {plans && plans.length === 0 ? (
+            <Card className="col-span-2">
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <p className="text-muted-foreground text-center">
+                  Nenhum plano estratégico cadastrado ainda.
+                  <br />
+                  Clique em "Novo Planejamento" para começar.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            plans?.map((plan) => {
             const client = clients?.find((c) => c.id === plan.client_id);
             return (
               <Card key={plan.id}>
@@ -166,7 +218,8 @@ export const StrategyForm = () => {
                 </CardContent>
               </Card>
             );
-          })}
+          })
+          )}
         </div>
       ) : (
         <Form {...form}>
@@ -182,18 +235,26 @@ export const StrategyForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={clientsLoading}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um cliente" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {clients?.map((client) => (
-                            <SelectItem key={client.id} value={client.id}>
-                              {client.name}
-                            </SelectItem>
-                          ))}
+                          {clients && clients.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              Nenhum cliente cadastrado. Cadastre um cliente primeiro.
+                            </div>
+                          ) : (
+                            clients?.map((client) => 
+                              client?.id && client?.name ? (
+                                <SelectItem key={client.id} value={client.id}>
+                                  {client.name}
+                                </SelectItem>
+                              ) : null
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -207,21 +268,45 @@ export const StrategyForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Briefing (opcional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Vincular a um briefing" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="">Nenhum</SelectItem>
-                          {briefings?.map((briefing) => (
-                            <SelectItem key={briefing.id} value={briefing.id}>
-                              {briefing.company_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value || undefined}
+                          disabled={briefingsLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Vincular a um briefing" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {briefings && briefings.length === 0 ? (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                Nenhum briefing disponível.
+                              </div>
+                            ) : (
+                              briefings?.map((briefing) => 
+                                briefing?.id && briefing?.company_name ? (
+                                  <SelectItem key={briefing.id} value={briefing.id}>
+                                    {briefing.company_name}
+                                  </SelectItem>
+                                ) : null
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {field.value && (
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => field.onChange(undefined)}
+                            title="Remover briefing"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

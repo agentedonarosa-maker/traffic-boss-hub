@@ -16,7 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, Trash2, Plus, Edit } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FileDown, Trash2, Plus, Edit, AlertCircle } from "lucide-react";
 
 const BUSINESS_SEGMENTS = [
   "E-commerce",
@@ -46,8 +48,8 @@ const CHANNELS = [
 ];
 
 export const BriefingForm = () => {
-  const { data: clients } = useClients();
-  const { data: briefings } = useBriefings();
+  const { data: clients, isLoading: clientsLoading, isError: clientsError } = useClients();
+  const { data: briefings, isLoading: briefingsLoading, isError: briefingsError } = useBriefings();
   const createBriefing = useCreateBriefing();
   const updateBriefing = useUpdateBriefing();
   const deleteBriefing = useDeleteBriefing();
@@ -120,6 +122,45 @@ export const BriefingForm = () => {
     return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
   };
 
+  if (briefingsLoading || clientsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Briefings de Clientes</h2>
+            <p className="text-muted-foreground">Carregando...</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (briefingsError || clientsError) {
+    return (
+      <div className="space-y-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro ao carregar dados. Tente recarregar a página.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -127,7 +168,7 @@ export const BriefingForm = () => {
           <h2 className="text-2xl font-bold">Briefings de Clientes</h2>
           <p className="text-muted-foreground">Gerencie os briefings dos seus clientes</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => setShowForm(!showForm)} disabled={clientsLoading}>
           <Plus className="h-4 w-4 mr-2" />
           {showForm ? "Ver Lista" : "Novo Briefing"}
         </Button>
@@ -135,7 +176,18 @@ export const BriefingForm = () => {
 
       {!showForm ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {briefings?.map((briefing) => (
+          {briefings && briefings.length === 0 ? (
+            <Card className="col-span-2">
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <p className="text-muted-foreground text-center">
+                  Nenhum briefing cadastrado ainda.
+                  <br />
+                  Clique em "Novo Briefing" para começar.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            briefings?.map((briefing) => (
             <Card key={briefing.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -166,7 +218,8 @@ export const BriefingForm = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            ))
+          )}
         </div>
       ) : (
         <Form {...form}>
@@ -182,18 +235,26 @@ export const BriefingForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={clientsLoading}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um cliente" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {clients?.map((client) => (
-                            <SelectItem key={client.id} value={client.id}>
-                              {client.name}
-                            </SelectItem>
-                          ))}
+                          {clients && clients.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              Nenhum cliente cadastrado. Cadastre um cliente primeiro.
+                            </div>
+                          ) : (
+                            clients?.map((client) => 
+                              client?.id && client?.name ? (
+                                <SelectItem key={client.id} value={client.id}>
+                                  {client.name}
+                                </SelectItem>
+                              ) : null
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

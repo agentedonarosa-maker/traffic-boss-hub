@@ -39,7 +39,7 @@ const timelineItemSchema = z.object({
 
 export const strategicPlanSchema = z.object({
   client_id: z.string().uuid("Cliente inválido"),
-  briefing_id: z.string().uuid().optional(),
+  briefing_id: z.string().uuid().optional().nullable(),
   strengths: z.array(z.string()).default([]),
   weaknesses: z.array(z.string()).default([]),
   opportunities: z.array(z.string()).default([]),
