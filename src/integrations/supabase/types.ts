@@ -259,6 +259,81 @@ export type Database = {
           },
         ]
       }
+      client_briefings: {
+        Row: {
+          additional_notes: string | null
+          business_description: string
+          business_segment: string
+          client_id: string
+          company_name: string
+          created_at: string
+          current_channels: string[] | null
+          id: string
+          main_competitors: string | null
+          main_objective: string
+          monthly_budget: number | null
+          pain_points: string | null
+          products_services: string
+          secondary_objectives: string[] | null
+          social_media_links: Json | null
+          status: string | null
+          success_metrics: string
+          target_audience: string
+          unique_selling_points: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          business_description: string
+          business_segment: string
+          client_id: string
+          company_name: string
+          created_at?: string
+          current_channels?: string[] | null
+          id?: string
+          main_competitors?: string | null
+          main_objective: string
+          monthly_budget?: number | null
+          pain_points?: string | null
+          products_services: string
+          secondary_objectives?: string[] | null
+          social_media_links?: Json | null
+          status?: string | null
+          success_metrics: string
+          target_audience: string
+          unique_selling_points?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          business_description?: string
+          business_segment?: string
+          client_id?: string
+          company_name?: string
+          created_at?: string
+          current_channels?: string[] | null
+          id?: string
+          main_competitors?: string | null
+          main_objective?: string
+          monthly_budget?: number | null
+          pain_points?: string | null
+          products_services?: string
+          secondary_objectives?: string[] | null
+          social_media_links?: Json | null
+          status?: string | null
+          success_metrics?: string
+          target_audience?: string
+          unique_selling_points?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       client_payments: {
         Row: {
           client_id: string
@@ -489,6 +564,63 @@ export type Database = {
         }
         Relationships: []
       }
+      strategic_plans: {
+        Row: {
+          briefing_id: string | null
+          channel_strategy: Json | null
+          client_id: string
+          created_at: string
+          funnel_stages: Json | null
+          id: string
+          kpis: Json | null
+          opportunities: string[] | null
+          personas: Json | null
+          status: string | null
+          strengths: string[] | null
+          threats: string[] | null
+          timeline: Json | null
+          updated_at: string
+          user_id: string
+          weaknesses: string[] | null
+        }
+        Insert: {
+          briefing_id?: string | null
+          channel_strategy?: Json | null
+          client_id: string
+          created_at?: string
+          funnel_stages?: Json | null
+          id?: string
+          kpis?: Json | null
+          opportunities?: string[] | null
+          personas?: Json | null
+          status?: string | null
+          strengths?: string[] | null
+          threats?: string[] | null
+          timeline?: Json | null
+          updated_at?: string
+          user_id: string
+          weaknesses?: string[] | null
+        }
+        Update: {
+          briefing_id?: string | null
+          channel_strategy?: Json | null
+          client_id?: string
+          created_at?: string
+          funnel_stages?: Json | null
+          id?: string
+          kpis?: Json | null
+          opportunities?: string[] | null
+          personas?: Json | null
+          status?: string | null
+          strengths?: string[] | null
+          threats?: string[] | null
+          timeline?: Json | null
+          updated_at?: string
+          user_id?: string
+          weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           campaign_id: string | null
@@ -703,10 +835,7 @@ export type Database = {
         }
         Returns: string
       }
-      generate_client_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_client_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -714,10 +843,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      promote_to_admin: {
-        Args: { user_email: string }
-        Returns: string
-      }
+      promote_to_admin: { Args: { user_email: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -33,6 +33,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Send, Loader2, CheckCircle, BookOpen, DollarSign, AlertCircle, Clock, Trash2, Check } from "lucide-react";
 import { PaymentForm } from "@/components/onboarding/PaymentForm";
+import { BriefingForm } from "@/components/onboarding/BriefingForm";
+import { StrategyForm } from "@/components/onboarding/StrategyForm";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -198,10 +200,18 @@ export default function Onboarding() {
       </div>
 
       <Tabs defaultValue="contract" className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
+        <TabsList className="grid w-full grid-cols-5 md:w-auto">
           <TabsTrigger value="contract" className="gap-2">
             <FileText className="w-4 h-4" />
             Contrato
+          </TabsTrigger>
+          <TabsTrigger value="briefing" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Briefing
+          </TabsTrigger>
+          <TabsTrigger value="planning" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Planejamento
           </TabsTrigger>
           <TabsTrigger value="payments" className="gap-2">
             <DollarSign className="w-4 h-4" />
@@ -303,6 +313,14 @@ export default function Onboarding() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="briefing" className="space-y-6">
+          <BriefingForm />
+        </TabsContent>
+
+        <TabsContent value="planning" className="space-y-6">
+          <StrategyForm />
         </TabsContent>
 
         <TabsContent value="payments" className="space-y-6">

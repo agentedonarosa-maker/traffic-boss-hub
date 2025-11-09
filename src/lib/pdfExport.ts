@@ -181,3 +181,63 @@ export const generateReportPDF = (data: ReportData) => {
   const fileName = `relatorio-${data.client.name.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
   doc.save(fileName);
 };
+
+export const exportBriefingToPDF = (briefing: any, clientName: string) => {
+  const doc = new jsPDF();
+  
+  doc.setFillColor(16, 185, 129);
+  doc.rect(0, 0, 210, 30, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.text('Briefing do Cliente', 105, 20, { align: 'center' });
+  
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${clientName}`, 14, 45);
+  doc.text(`Empresa: ${briefing.company_name}`, 14, 55);
+  
+  autoTable(doc, {
+    startY: 65,
+    head: [['Campo', 'Informação']],
+    body: [
+      ['Segmento', briefing.business_segment],
+      ['Objetivo Principal', briefing.main_objective],
+      ['Orçamento Mensal', `R$ ${briefing.monthly_budget || 0}`],
+      ['Canais', briefing.current_channels.join(', ')],
+    ],
+    theme: 'striped',
+  });
+  
+  doc.save(`briefing-${clientName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+};
+
+export const exportStrategicPlanToPDF = (plan: any, clientName: string) => {
+  const doc = new jsPDF();
+  
+  doc.setFillColor(16, 185, 129);
+  doc.rect(0, 0, 210, 30, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.text('Planejamento Estratégico', 105, 20, { align: 'center' });
+  
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${clientName}`, 14, 45);
+  
+  let y = 60;
+  doc.setFontSize(14);
+  doc.text('SWOT', 14, y);
+  
+  autoTable(doc, {
+    startY: y + 5,
+    body: [
+      ['Forças', (plan.strengths || []).join(', ')],
+      ['Fraquezas', (plan.weaknesses || []).join(', ')],
+      ['Oportunidades', (plan.opportunities || []).join(', ')],
+      ['Ameaças', (plan.threats || []).join(', ')],
+    ],
+    theme: 'grid',
+  });
+  
+  doc.save(`planejamento-${clientName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+};
