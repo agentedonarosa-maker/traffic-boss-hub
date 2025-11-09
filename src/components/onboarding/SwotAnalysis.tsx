@@ -57,7 +57,7 @@ export const SwotAnalysis = ({ strengths, weaknesses, opportunities, threats, on
   );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
       {renderQuadrant("Forças (Strengths)", strengths, "strengths", "border-green-200 dark:border-green-800")}
       {renderQuadrant("Fraquezas (Weaknesses)", weaknesses, "weaknesses", "border-red-200 dark:border-red-800")}
       {renderQuadrant("Oportunidades (Opportunities)", opportunities, "opportunities", "border-blue-200 dark:border-blue-800")}

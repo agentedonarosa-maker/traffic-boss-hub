@@ -38,28 +38,29 @@ export const PersonaBuilder = ({ personas, onChange }: PersonaBuilderProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Personas</h3>
-        <Button onClick={addPersona} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Persona
+    <div className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+        <h3 className="text-base sm:text-lg font-semibold">Personas</h3>
+        <Button onClick={addPersona} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+          <Plus className="h-3 h-3 sm:h-4 sm:w-4 mr-2" />
+          <span className="hidden sm:inline">Adicionar Persona</span>
+          <span className="sm:hidden">Adicionar</span>
         </Button>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3 sm:gap-4">
         {personas.map((persona, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-4 w-4" />
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                <User className="h-3 h-3 sm:h-4 sm:w-4" />
                 Persona {index + 1}
               </CardTitle>
               <Button variant="ghost" size="sm" onClick={() => removePersona(index)}>
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 h-3 sm:h-4 sm:w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid gap-3 sm:gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nome</Label>
                 <Input

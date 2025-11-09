@@ -22,21 +22,21 @@ export const ChannelPlanning = ({ channels, onChange }: ChannelPlanningProps) =>
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Estratégia por Canal</h3>
-      <div className="grid gap-4">
+    <div className="space-y-3 sm:space-y-4">
+      <h3 className="text-base sm:text-lg font-semibold">Estratégia por Canal</h3>
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {CHANNELS.map(({ key, name, icon }) => {
           const channelData = channels[key] || { objective: "", budget: 0, campaign_types: [], kpis: [], notes: "" };
 
           return (
             <Card key={key}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
                   <span>{icon}</span>
                   {name}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
+              <CardContent className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
                   <Label>Objetivo do Canal</Label>
                   <Textarea

@@ -45,8 +45,8 @@ export function CampaignForm({
   const status = watch("status");
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-3 sm:gap-4 py-3 sm:py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">
             Nome da Campanha <span className="text-destructive">*</span>
@@ -86,7 +86,7 @@ export function CampaignForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="platform">
             Plataforma <span className="text-destructive">*</span>
@@ -125,7 +125,7 @@ export function CampaignForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="budget">Orçamento (R$)</Label>
           <Input
@@ -177,13 +177,14 @@ export function CampaignForm({
         </Select>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3 sm:pt-4">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto text-sm">
           Cancelar
         </Button>
-        <Button type="submit" className="bg-gradient-primary" disabled={isLoading}>
+        <Button type="submit" className="bg-gradient-primary w-full sm:w-auto text-sm" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Salvar Campanha
+          <span className="hidden sm:inline">Salvar Campanha</span>
+          <span className="sm:hidden">Salvar</span>
         </Button>
       </div>
     </form>

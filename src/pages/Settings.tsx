@@ -182,34 +182,34 @@ export default function Settings() {
       </Card>
 
       <Tabs defaultValue={selectedClientId ? "meta" : "webhooks"} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
           {selectedClientId && (
             <>
-              <TabsTrigger value="meta" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-                <Plug className="w-3 h-3 md:w-4 md:h-4" />
+              <TabsTrigger value="meta" className="gap-1 flex-col sm:flex-row py-2 sm:py-1.5 text-[10px] sm:text-xs md:text-sm">
+                <Plug className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Meta Ads</span>
-                <span className="sm:hidden">Meta</span>
-                {getIntegration('meta') && <CheckCircle2 className="w-3 h-3 text-success" />}
+                <span className="sm:hidden text-[9px]">Meta</span>
+                {getIntegration('meta') && <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-success" />}
               </TabsTrigger>
-              <TabsTrigger value="google" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-                <Plug className="w-3 h-3 md:w-4 md:h-4" />
+              <TabsTrigger value="google" className="gap-1 flex-col sm:flex-row py-2 sm:py-1.5 text-[10px] sm:text-xs md:text-sm">
+                <Plug className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Google Ads</span>
-                <span className="sm:hidden">Google</span>
-                {getIntegration('google') && <CheckCircle2 className="w-3 h-3 text-success" />}
+                <span className="sm:hidden text-[9px]">Google</span>
+                {getIntegration('google') && <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-success" />}
               </TabsTrigger>
-              <TabsTrigger value="tiktok" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-                <Plug className="w-3 h-3 md:w-4 md:h-4" />
+              <TabsTrigger value="tiktok" className="gap-1 flex-col sm:flex-row py-2 sm:py-1.5 text-[10px] sm:text-xs md:text-sm">
+                <Plug className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">TikTok Ads</span>
-                <span className="sm:hidden">TikTok</span>
-                {getIntegration('tiktok') && <CheckCircle2 className="w-3 h-3 text-success" />}
+                <span className="sm:hidden text-[9px]">TikTok</span>
+                {getIntegration('tiktok') && <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-success" />}
               </TabsTrigger>
             </>
           )}
-          <TabsTrigger value="webhooks" className="gap-1 md:gap-2 flex-col md:flex-row py-2 md:py-1.5 text-xs md:text-sm">
-            <Webhook className="w-3 h-3 md:w-4 md:h-4" />
+          <TabsTrigger value="webhooks" className="gap-1 flex-col sm:flex-row py-2 sm:py-1.5 text-[10px] sm:text-xs md:text-sm">
+            <Webhook className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Webhooks</span>
-            <span className="sm:hidden">Hooks</span>
-            {webhooks.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{webhooks.length}</Badge>}
+            <span className="sm:hidden text-[9px]">Hooks</span>
+            {webhooks.length > 0 && <Badge variant="secondary" className="ml-1 text-[9px] sm:text-xs">{webhooks.length}</Badge>}
           </TabsTrigger>
         </TabsList>
 
@@ -247,16 +247,19 @@ export default function Settings() {
                       onClick={() => importMetaCampaigns.mutate(selectedClientId)}
                       disabled={importMetaCampaigns.isPending}
                       variant="default"
+                      className="w-full sm:w-auto text-sm"
                     >
                       {importMetaCampaigns.isPending ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Importando...
+                          <span className="hidden sm:inline">Importando...</span>
+                          <span className="sm:hidden">Importando...</span>
                         </>
                       ) : (
                         <>
                           <Download className="w-4 h-4 mr-2" />
-                          Importar Campanhas
+                          <span className="hidden sm:inline">Importar Campanhas</span>
+                          <span className="sm:hidden">Importar</span>
                         </>
                       )}
                     </Button>
@@ -264,6 +267,7 @@ export default function Settings() {
                     <Button 
                       variant="destructive" 
                       onClick={() => setIntegrationToDelete(getIntegration('meta')!.id)}
+                      className="w-full sm:w-auto text-sm"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Desconectar
@@ -340,7 +344,7 @@ export default function Settings() {
                 </div>
               ) : (
                 <form onSubmit={handleGoogleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="google-client-id">Client ID</Label>
                       <Input
@@ -374,7 +378,7 @@ export default function Settings() {
                       required
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="google-customer-id">Customer ID</Label>
                       <Input

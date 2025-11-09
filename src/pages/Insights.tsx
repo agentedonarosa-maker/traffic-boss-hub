@@ -152,16 +152,16 @@ export default function Insights() {
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', 'hsl(var(--destructive))'];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6 p-3 sm:p-4 md:p-6">
       <div>
-        <h1 className="text-3xl font-bold">Insights Avançados</h1>
-        <p className="text-muted-foreground">Análise detalhada de performance com KPIs e gráficos interativos</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Insights Avançados</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">Análise detalhada de performance com KPIs e gráficos interativos</p>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Período</label>
               <Select value={dateRange} onValueChange={setDateRange}>
@@ -226,7 +226,7 @@ export default function Insights() {
       </Card>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         <MetricCard
           title="ROAS Médio"
           value={avgRoas.toFixed(2)}
@@ -261,11 +261,11 @@ export default function Insights() {
 
       {/* Charts Tabs */}
       <Tabs defaultValue="performance" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="campaigns">Campanhas</TabsTrigger>
-          <TabsTrigger value="platforms">Plataformas</TabsTrigger>
-          <TabsTrigger value="demographics">Demográfico</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+          <TabsTrigger value="performance" className="text-xs sm:text-sm">Performance</TabsTrigger>
+          <TabsTrigger value="campaigns" className="text-xs sm:text-sm">Campanhas</TabsTrigger>
+          <TabsTrigger value="platforms" className="text-xs sm:text-sm">Plataformas</TabsTrigger>
+          <TabsTrigger value="demographics" className="text-xs sm:text-sm">Demográfico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="performance" className="space-y-4">

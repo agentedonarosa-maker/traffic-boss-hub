@@ -161,33 +161,35 @@ export default function Calendar() {
   const isLoading = meetingsLoading || clientsLoading || tasksLoading || campaignsLoading;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Agenda</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Agenda</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Gerencie reuniões com clientes e tarefas de otimização
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleCreateTask} variant="outline">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={handleCreateTask} variant="outline" className="w-full sm:w-auto text-sm">
             <Plus className="w-4 h-4 mr-2" />
-            Nova Tarefa
+            <span className="hidden sm:inline">Nova Tarefa</span>
+            <span className="sm:hidden">Tarefa</span>
           </Button>
-          <Button onClick={handleCreateMeeting}>
+          <Button onClick={handleCreateMeeting} className="w-full sm:w-auto text-sm">
             <Plus className="w-4 h-4 mr-2" />
-            Nova Reunião
+            <span className="hidden sm:inline">Nova Reunião</span>
+            <span className="sm:hidden">Reunião</span>
           </Button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-xs sm:text-sm text-muted-foreground">
           Carregando agenda...
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5 md:space-y-6">
             <CalendarView
               meetings={meetings}
               clients={clients}
@@ -196,7 +198,7 @@ export default function Calendar() {
             />
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-5 md:space-y-6">
             <UpcomingMeetings
               meetings={meetings}
               clients={clients}

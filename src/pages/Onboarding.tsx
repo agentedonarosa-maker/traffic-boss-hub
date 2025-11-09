@@ -200,26 +200,28 @@ export default function Onboarding() {
       </div>
 
       <Tabs defaultValue="contract" className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-5 md:w-auto">
-          <TabsTrigger value="contract" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Contrato
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 md:w-auto">
+          <TabsTrigger value="contract" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
+            <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Contrato</span>
           </TabsTrigger>
-          <TabsTrigger value="briefing" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Briefing
+          <TabsTrigger value="briefing" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
+            <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Briefing</span>
           </TabsTrigger>
-          <TabsTrigger value="planning" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Planejamento
+          <TabsTrigger value="planning" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
+            <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Planejamento</span>
+            <span className="sm:hidden">Plano</span>
           </TabsTrigger>
-          <TabsTrigger value="payments" className="gap-2">
-            <DollarSign className="w-4 h-4" />
-            Pagamentos
+          <TabsTrigger value="payments" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
+            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Pagamentos</span>
+            <span className="sm:hidden">$</span>
           </TabsTrigger>
-          <TabsTrigger value="guide" className="gap-2">
-            <BookOpen className="w-4 h-4" />
-            Guia
+          <TabsTrigger value="guide" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
+            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Guia</span>
           </TabsTrigger>
         </TabsList>
 

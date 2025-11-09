@@ -78,9 +78,9 @@ export const FunnelStrategy = ({ funnel, onChange }: FunnelStrategyProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Funil de Marketing</h3>
-      <div className="grid gap-4 md:grid-cols-3">
+    <div className="space-y-3 sm:space-y-4">
+      <h3 className="text-base sm:text-lg font-semibold">Funil de Marketing</h3>
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
         {renderStage(
           "awareness",
           "Topo de Funil",
