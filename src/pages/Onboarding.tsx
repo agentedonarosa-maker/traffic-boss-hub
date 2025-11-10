@@ -31,11 +31,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Send, Loader2, CheckCircle, BookOpen, DollarSign, AlertCircle, Clock, Trash2, Check } from "lucide-react";
+import { FileText, Send, Loader2, CheckCircle, BookOpen, DollarSign, AlertCircle, Clock, Trash2, Check, Calculator } from "lucide-react";
 import { PaymentForm } from "@/components/onboarding/PaymentForm";
 import { BriefingForm } from "@/components/onboarding/BriefingForm";
 import { StrategyForm } from "@/components/onboarding/StrategyForm";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { MetricsCalculators } from "@/components/onboarding/MetricsCalculators";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -200,7 +201,7 @@ export default function Onboarding() {
       </div>
 
       <Tabs defaultValue="contract" className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 md:w-auto">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-1 md:w-auto">
           <TabsTrigger value="contract" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
             <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
             <span>Contrato</span>
@@ -218,6 +219,11 @@ export default function Onboarding() {
             <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Pagamentos</span>
             <span className="sm:hidden">$</span>
+          </TabsTrigger>
+          <TabsTrigger value="calculators" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
+            <Calculator className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Calculadoras</span>
+            <span className="sm:hidden">Calc</span>
           </TabsTrigger>
           <TabsTrigger value="guide" className="gap-1 flex-col sm:flex-row py-2 text-[10px] sm:text-xs md:text-sm">
             <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -463,6 +469,10 @@ export default function Onboarding() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </TabsContent>
+
+        <TabsContent value="calculators" className="space-y-6">
+          <MetricsCalculators />
         </TabsContent>
 
         <TabsContent value="guide" className="space-y-4 md:space-y-6">
