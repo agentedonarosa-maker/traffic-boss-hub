@@ -31,7 +31,7 @@ export function ClientForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">
             Nome <span className="text-destructive">*</span>
@@ -60,7 +60,7 @@ export function ClientForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="contact">Contato</Label>
           <Input

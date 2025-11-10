@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,7 @@ import { cn } from "@/lib/utils";
 export default function Settings() {
   const { data: clients = [] } = useClients();
   const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const { data: integrations = [], isLoading } = useIntegrations(selectedClientId);
+  const { data: integrations = [], isLoading: integrationsLoading } = useIntegrations(selectedClientId);
   const createIntegration = useCreateIntegration();
   const deleteIntegration = useDeleteIntegration();
   const importMetaCampaigns = useImportMetaCampaigns();
@@ -236,7 +237,12 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('meta') ? (
+              {integrationsLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              ) : getIntegration('meta') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
@@ -329,7 +335,12 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('google') ? (
+              {integrationsLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              ) : getIntegration('google') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.
@@ -436,7 +447,12 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              {getIntegration('tiktok') ? (
+              {integrationsLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              ) : getIntegration('tiktok') ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Sua conta está conectada e sincronizando dados automaticamente.

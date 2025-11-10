@@ -23,9 +23,24 @@ export const usePayments = () => {
         .eq("user_id", user.id)
         .order("due_date", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading payments with client data:", error);
+        
+        // Fallback: carregar sem join se FK não existir
+        const { data: paymentsOnly, error: fallbackError } = await supabase
+          .from("client_payments")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("due_date", { ascending: true });
+        
+        if (fallbackError) throw fallbackError;
+        return paymentsOnly;
+      }
+      
       return data;
     },
     enabled: !!user,
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 };
