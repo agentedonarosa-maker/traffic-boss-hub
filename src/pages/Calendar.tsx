@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useMeetings } from '@/hooks/useMeetings';
 import { useClients } from '@/hooks/useClients';
 import { useTasks } from '@/hooks/useTasks';
@@ -135,6 +136,34 @@ export default function Calendar() {
     } catch (error: any) {
       console.error('Error updating task:', error);
     }
+  };
+
+  const getConfirmationStatusBadge = (status: string | null) => {
+    if (!status || status === 'pending') {
+      return <Badge variant="secondary" className="text-xs bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
+        <Clock className="w-3 h-3 mr-1" />
+        Aguardando
+      </Badge>;
+    }
+    if (status === 'confirmed') {
+      return <Badge variant="default" className="text-xs bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
+        <CheckCircle className="w-3 h-3 mr-1" />
+        Confirmada
+      </Badge>;
+    }
+    if (status === 'declined') {
+      return <Badge variant="destructive" className="text-xs bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+        <XCircle className="w-3 h-3 mr-1" />
+        Recusada
+      </Badge>;
+    }
+    if (status === 'rescheduled') {
+      return <Badge variant="default" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20">
+        <CalendarIcon className="w-3 h-3 mr-1" />
+        Reagendar
+      </Badge>;
+    }
+    return null;
   };
 
   const getDefaultMeetingValues = (): Partial<MeetingFormData> => {

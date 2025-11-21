@@ -10,6 +10,10 @@ export interface Meeting {
   meeting_date: string;
   feedback: string | null;
   created_at: string;
+  client_confirmation_status?: string | null;
+  client_confirmed_at?: string | null;
+  client_suggested_dates?: string | null;
+  client_notes?: string | null;
 }
 
 export const useMeetings = () => {

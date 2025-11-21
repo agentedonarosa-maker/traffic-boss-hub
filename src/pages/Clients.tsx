@@ -37,6 +37,7 @@ import {
   Building,
   DollarSign,
   Loader2,
+  Share2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,6 +51,7 @@ import { useUpdateClient } from "@/hooks/useUpdateClient";
 import { useDeleteClient } from "@/hooks/useDeleteClient";
 import { useClientAccess, useGenerateClientAccess } from "@/hooks/useClientAccess";
 import { ClientForm } from "@/components/clients/ClientForm";
+import { SharePortalWrapper } from "@/components/clients/SharePortalWrapper";
 import { toast } from "@/hooks/use-toast";
 import type { ClientFormData } from "@/lib/validations/client";
 import { ResponsiveTable } from "@/components/ui/responsive-table";
@@ -60,6 +62,7 @@ export default function Clients() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
 
@@ -136,32 +139,27 @@ export default function Clients() {
   const ClientAccessButton = ({ clientId }: { clientId: string }) => {
     const { data: access } = useClientAccess(clientId);
 
-    if (access) {
-      const portalUrl = `${window.location.origin}/client-portal/${access.access_token}`;
-      
-      return (
-        <DropdownMenuItem
-          onClick={() => {
-            navigator.clipboard.writeText(portalUrl);
-            toast({
-              title: "Link copiado",
-              description: "O link do portal foi copiado",
-            });
-          }}
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          Copiar Link Portal
-        </DropdownMenuItem>
-      );
-    }
+    const handleShare = () => {
+      const client = clients.find(c => c.id === clientId);
+      if (client) {
+        if (access) {
+          setSelectedClient(client);
+          setIsShareDialogOpen(true);
+        } else {
+          generateAccess.mutate(clientId, {
+            onSuccess: () => {
+              setSelectedClient(client);
+              setTimeout(() => setIsShareDialogOpen(true), 500);
+            }
+          });
+        }
+      }
+    };
 
     return (
-      <DropdownMenuItem
-        onClick={() => handleGenerateAccess(clientId)}
-        disabled={generateAccess.isPending}
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        {generateAccess.isPending ? "Gerando..." : "Gerar Acesso"}
+      <DropdownMenuItem onClick={handleShare}>
+        <Share2 className="w-4 h-4 mr-2" />
+        Compartilhar Portal
       </DropdownMenuItem>
     );
   };
@@ -481,6 +479,17 @@ export default function Clients() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Share Portal Dialog */}
+      {selectedClient && (
+        <SharePortalWrapper
+          open={isShareDialogOpen}
+          onOpenChange={setIsShareDialogOpen}
+          clientId={selectedClient.id}
+          clientName={selectedClient.name}
+          agencyName="Sua Agência"
+        />
+      )}
     </div>
   );
 }

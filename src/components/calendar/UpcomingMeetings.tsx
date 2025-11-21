@@ -56,11 +56,26 @@ export default function UpcomingMeetings({ meetings, clients, onEdit, onDelete }
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-semibold">{meeting.title}</h4>
                         <Badge variant="outline" className="text-xs">
                           {getClientName(meeting.client_id)}
                         </Badge>
+                        {meeting.client_confirmation_status && meeting.client_confirmation_status !== 'pending' && (
+                          meeting.client_confirmation_status === 'confirmed' ? (
+                            <Badge variant="default" className="text-xs bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
+                              ✓ Confirmada
+                            </Badge>
+                          ) : meeting.client_confirmation_status === 'declined' ? (
+                            <Badge variant="destructive" className="text-xs bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                              ✗ Recusada
+                            </Badge>
+                          ) : meeting.client_confirmation_status === 'rescheduled' ? (
+                            <Badge variant="default" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20">
+                              📅 Reagendar
+                            </Badge>
+                          ) : null
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">

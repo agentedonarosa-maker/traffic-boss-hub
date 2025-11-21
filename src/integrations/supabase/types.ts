@@ -485,7 +485,13 @@ export type Database = {
       }
       meetings: {
         Row: {
+          client_confirmation_status:
+            | Database["public"]["Enums"]["meeting_confirmation_status"]
+            | null
+          client_confirmed_at: string | null
           client_id: string
+          client_notes: string | null
+          client_suggested_dates: Json | null
           created_at: string | null
           description: string | null
           feedback: string | null
@@ -499,7 +505,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_confirmation_status?:
+            | Database["public"]["Enums"]["meeting_confirmation_status"]
+            | null
+          client_confirmed_at?: string | null
           client_id: string
+          client_notes?: string | null
+          client_suggested_dates?: Json | null
           created_at?: string | null
           description?: string | null
           feedback?: string | null
@@ -513,7 +525,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          client_confirmation_status?:
+            | Database["public"]["Enums"]["meeting_confirmation_status"]
+            | null
+          client_confirmed_at?: string | null
           client_id?: string
+          client_notes?: string | null
+          client_suggested_dates?: Json | null
           created_at?: string | null
           description?: string | null
           feedback?: string | null
@@ -855,6 +873,11 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      meeting_confirmation_status:
+        | "pending"
+        | "confirmed"
+        | "declined"
+        | "rescheduled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -983,6 +1006,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      meeting_confirmation_status: [
+        "pending",
+        "confirmed",
+        "declined",
+        "rescheduled",
+      ],
     },
   },
 } as const
