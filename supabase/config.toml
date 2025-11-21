@@ -3,6 +3,9 @@ project_id = "bdkdcwfmevyvzxjvmxgt"
 [functions.validate-client-token]
 verify_jwt = false
 
+[functions.manage-meeting-confirmation]
+verify_jwt = false
+
 [functions.import-meta-insights]
 verify_jwt = true
 
