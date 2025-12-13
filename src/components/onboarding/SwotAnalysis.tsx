@@ -36,7 +36,7 @@ export const SwotAnalysis = ({ strengths, weaknesses, opportunities, threats, on
         {items.map((item, index) => (
           <div key={index} className="flex items-center justify-between gap-2 p-2 bg-background rounded">
             <span className="text-sm flex-1">{item}</span>
-            <Button size="sm" variant="ghost" onClick={() => removeItem(field, index)}>
+            <Button type="button" size="sm" variant="ghost" onClick={() => removeItem(field, index)}>
               <X className="h-3 w-3" />
             </Button>
           </div>
@@ -48,7 +48,7 @@ export const SwotAnalysis = ({ strengths, weaknesses, opportunities, threats, on
             onChange={(e) => setNewItem({ ...newItem, [field]: e.target.value })}
             onKeyDown={(e) => e.key === "Enter" && addItem(field)}
           />
-          <Button size="sm" onClick={() => addItem(field)}>
+          <Button type="button" size="sm" onClick={() => addItem(field)}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
