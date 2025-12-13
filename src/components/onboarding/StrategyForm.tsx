@@ -430,7 +430,7 @@ export const StrategyForm = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button size="sm" variant="ghost" onClick={() => removeKpi(index)}>
+                          <Button type="button" size="sm" variant="ghost" onClick={() => removeKpi(index)}>
                             <X className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -484,7 +484,7 @@ export const StrategyForm = () => {
                             ))}
                           </ul>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => removeTimeline(index)}>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => removeTimeline(index)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </CardContent>

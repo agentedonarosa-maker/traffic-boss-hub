@@ -41,7 +41,7 @@ export const PersonaBuilder = ({ personas, onChange }: PersonaBuilderProps) => {
     <div className="space-y-3 sm:space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
         <h3 className="text-base sm:text-lg font-semibold">Personas</h3>
-        <Button onClick={addPersona} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+        <Button type="button" onClick={addPersona} size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
           <Plus className="h-3 h-3 sm:h-4 sm:w-4 mr-2" />
           <span className="hidden sm:inline">Adicionar Persona</span>
           <span className="sm:hidden">Adicionar</span>
@@ -56,7 +56,7 @@ export const PersonaBuilder = ({ personas, onChange }: PersonaBuilderProps) => {
                 <User className="h-3 h-3 sm:h-4 sm:w-4" />
                 Persona {index + 1}
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => removePersona(index)}>
+              <Button type="button" variant="ghost" size="sm" onClick={() => removePersona(index)}>
                 <Trash2 className="h-3 h-3 sm:h-4 sm:w-4" />
               </Button>
             </CardHeader>
@@ -126,7 +126,7 @@ export const PersonaBuilder = ({ personas, onChange }: PersonaBuilderProps) => {
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <User className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">Nenhuma persona criada ainda</p>
-              <Button onClick={addPersona}>
+              <Button type="button" onClick={addPersona}>
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Primeira Persona
               </Button>
