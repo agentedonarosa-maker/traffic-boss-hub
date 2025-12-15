@@ -23,6 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FileDown, Trash2, Plus, Edit, X, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { exportStrategicPlanToPDF } from "@/lib/pdfExport";
 
 export const StrategyForm = () => {
   const { data: clients, isLoading: clientsLoading, isError: clientsError } = useClients();
@@ -207,7 +208,11 @@ export const StrategyForm = () => {
                       <Edit className="h-4 w-4 mr-1" />
                       Editar
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => exportStrategicPlanToPDF(plan, client?.name || "Cliente")}
+                    >
                       <FileDown className="h-4 w-4 mr-1" />
                       PDF
                     </Button>
