@@ -1,8 +1,33 @@
+# TrafficPro - Robots.txt
+# =====================================================
+# Configuração de crawlers para produção
+# =====================================================
+
 User-agent: Googlebot
-Allow: /
+Allow: /auth
+Allow: /terms
+Allow: /client-portal
+Disallow: /clients
+Disallow: /campaigns
+Disallow: /reports
+Disallow: /insights
+Disallow: /calendar
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /analytics
 
 User-agent: Bingbot
-Allow: /
+Allow: /auth
+Allow: /terms
+Allow: /client-portal
+Disallow: /clients
+Disallow: /campaigns
+Disallow: /reports
+Disallow: /insights
+Disallow: /calendar
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /analytics
 
 User-agent: Twitterbot
 Allow: /
@@ -11,4 +36,17 @@ User-agent: facebookexternalhit
 Allow: /
 
 User-agent: *
-Allow: /
+Allow: /auth
+Allow: /terms
+Allow: /client-portal
+Disallow: /clients
+Disallow: /campaigns
+Disallow: /reports
+Disallow: /insights
+Disallow: /calendar
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /analytics
+
+# Sitemap (adicione quando tiver um sitemap gerado)
+# Sitemap: https://seu-dominio.com/sitemap.xml
