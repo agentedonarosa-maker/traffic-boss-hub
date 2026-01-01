@@ -26,7 +26,8 @@
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Integrações](#-integrações)
 - [Segurança](#-segurança)
-- [Deployment](#-deployment)
+- [Deploy em VPS](#-deploy-em-vps)
+- [Deployment (Desenvolvimento)](#-deployment-desenvolvimento)
 - [Documentação Adicional](#-documentação-adicional)
 - [Suporte](#-suporte)
 - [Licença](#-licença)
@@ -502,21 +503,67 @@ curl -X POST \
 
 ---
 
-## 🚀 Deployment
+## 🐳 Deploy em VPS
+
+O TrafficPro inclui um **Deploy Pack** completo para deploy em produção usando Docker e Caddy.
+
+### Quick Start
+
+```bash
+# 1. Clone o repositório no servidor
+git clone <url-do-repositorio> trafficpro
+cd trafficpro
+
+# 2. Torne o script executável
+chmod +x ops/scripts/deploy.sh
+
+# 3. Execute o deploy
+bash ops/scripts/deploy.sh
+```
+
+**Acesse em:** `http://seu-servidor:8080`
+
+### O que está incluído
+
+- ✅ **Docker multi-stage** - Build otimizado com imagem Alpine
+- ✅ **Caddy** - Servidor web com suporte a HTTP/2
+- ✅ **Compressão gzip** - Otimização automática de assets
+- ✅ **Headers de segurança** - Proteção contra XSS, Clickjacking, etc.
+- ✅ **Health checks** - Monitoramento automático do container
+- ✅ **Script de deploy** - Automatização completa
+
+### Documentação Completa
+
+📖 **[ops/README_DEPLOY.md](ops/README_DEPLOY.md)** - Guia detalhado de deploy  
+📋 **[DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md)** - Checklist de verificação
+
+### Configuração de HTTPS
+
+Para HTTPS em produção, configure o Caddyfile com seu domínio:
+
+```caddyfile
+seu-dominio.com {
+    root * /srv
+    encode gzip
+    try_files {path} /index.html
+    file_server
+}
+```
+
+O Caddy irá obter certificados SSL automaticamente via Let's Encrypt.
+
+---
+
+## 🔧 Deployment (Desenvolvimento)
 
 ### Deploy via Lovable
 
-O projeto está hospedado no **Lovable** e pode ser publicado facilmente:
+Para desenvolvimento e preview:
 
-1. Acesse o [Projeto no Lovable](https://lovable.dev/projects/d707b2cd-02af-4bd8-b170-ae2153e7654c)
-2. Clique no botão **"Publish"** no canto superior direito
-3. Configure seu domínio personalizado em **Settings > Domains**
+1. Clique no botão **"Publish"** no canto superior direito
+2. Configure seu domínio personalizado em **Settings > Domains**
 
-**URL do Projeto:** https://lovable.dev/projects/d707b2cd-02af-4bd8-b170-ae2153e7654c
-
-### Deploy Manual
-
-Para deploy em outras plataformas (Vercel, Netlify, etc.):
+### Build Manual
 
 ```bash
 # Build do projeto
@@ -524,507 +571,6 @@ npm run build
 
 # O output estará na pasta dist/
 ```
-
-### Deploy em VPS Self-Hosted
-
-Para hospedar o TrafficPro em seu próprio servidor VPS (Ubuntu/Debian):
-
-#### Pré-requisitos do Servidor
-
-- Ubuntu 20.04+ ou Debian 11+
-- Mínimo 2GB RAM
-- 20GB de armazenamento
-- Acesso root ou sudo
-- Domínio configurado apontando para o IP do servidor
-
-#### 1. Configuração Inicial do Servidor
-
-```bash
-# Atualize o sistema
-sudo apt update && sudo apt upgrade -y
-
-# Instale dependências essenciais
-sudo apt install -y curl git nginx certbot python3-certbot-nginx ufw
-
-# Configure o firewall
-sudo ufw allow OpenSSH
-sudo ufw allow 'Nginx Full'
-sudo ufw enable
-```
-
-#### 2. Instale o Node.js
-
-```bash
-# Instale o Node.js 18.x via NodeSource
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Verifique a instalação
-node --version  # Deve mostrar v18.x.x
-npm --version   # Deve mostrar 9.x.x ou superior
-```
-
-#### 3. Clone e Configure o Projeto
-
-```bash
-# Crie um diretório para aplicações
-sudo mkdir -p /var/www
-cd /var/www
-
-# Clone o repositório
-sudo git clone <URL_DO_SEU_REPOSITORIO> trafficpro
-cd trafficpro
-
-# Instale as dependências
-sudo npm install
-
-# Build do projeto
-sudo npm run build
-```
-
-#### 4. Configure o Nginx
-
-Crie um arquivo de configuração para o Nginx:
-
-```bash
-sudo nano /etc/nginx/sites-available/trafficpro
-```
-
-Adicione a seguinte configuração:
-
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name seu-dominio.com www.seu-dominio.com;
-
-    root /var/www/trafficpro/dist;
-    index index.html;
-
-    # Compressão Gzip
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-
-    # Cache de assets estáticos
-    location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # SPA routing - redireciona todas as rotas para index.html
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-
-    # Desabilitar logs de acesso para assets (opcional)
-    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2)$ {
-        access_log off;
-    }
-}
-```
-
-Ative a configuração:
-
-```bash
-# Crie um link simbólico
-sudo ln -s /etc/nginx/sites-available/trafficpro /etc/nginx/sites-enabled/
-
-# Remova a configuração padrão
-sudo rm /etc/nginx/sites-enabled/default
-
-# Teste a configuração
-sudo nginx -t
-
-# Reinicie o Nginx
-sudo systemctl restart nginx
-```
-
-#### 5. Configure SSL com Let's Encrypt
-
-```bash
-# Obtenha certificado SSL gratuito
-sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
-
-# Certbot irá:
-# 1. Verificar propriedade do domínio
-# 2. Gerar certificados SSL
-# 3. Configurar HTTPS no Nginx automaticamente
-# 4. Configurar renovação automática
-
-# Teste a renovação automática
-sudo certbot renew --dry-run
-```
-
-Após a configuração SSL, o Nginx será atualizado automaticamente para:
-
-```nginx
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name seu-dominio.com www.seu-dominio.com;
-
-    ssl_certificate /etc/letsencrypt/live/seu-dominio.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/seu-dominio.com/privkey.pem;
-    
-    # ... resto da configuração
-}
-
-# Redirecionamento HTTP para HTTPS
-server {
-    listen 80;
-    listen [::]:80;
-    server_name seu-dominio.com www.seu-dominio.com;
-    return 301 https://$server_name$request_uri;
-}
-```
-
-#### 6. Configure Atualizações Automáticas
-
-Crie um script de deploy:
-
-```bash
-sudo nano /var/www/trafficpro/deploy.sh
-```
-
-Adicione o seguinte conteúdo:
-
-```bash
-#!/bin/bash
-
-# Script de Deploy TrafficPro
-# Copyright © 2025 Mauro Duffrayer
-
-echo "🚀 Iniciando deploy do TrafficPro..."
-
-# Navegar para o diretório do projeto
-cd /var/www/trafficpro
-
-# Fazer backup do build anterior
-echo "📦 Criando backup..."
-if [ -d "dist" ]; then
-    mv dist dist.backup.$(date +%Y%m%d_%H%M%S)
-fi
-
-# Atualizar código do repositório
-echo "📥 Atualizando código..."
-git pull origin main
-
-# Instalar/atualizar dependências
-echo "📦 Instalando dependências..."
-npm install
-
-# Build do projeto
-echo "🔨 Compilando projeto..."
-npm run build
-
-# Verificar se o build foi bem-sucedido
-if [ ! -d "dist" ]; then
-    echo "❌ Erro: Build falhou!"
-    if [ -d "dist.backup.*" ]; then
-        echo "♻️  Restaurando backup..."
-        mv dist.backup.* dist
-    fi
-    exit 1
-fi
-
-# Limpar backups antigos (manter apenas os 3 mais recentes)
-echo "🧹 Limpando backups antigos..."
-ls -dt dist.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf
-
-# Recarregar Nginx
-echo "🔄 Recarregando Nginx..."
-sudo systemctl reload nginx
-
-echo "✅ Deploy concluído com sucesso!"
-echo "🌐 Site disponível em: https://seu-dominio.com"
-```
-
-Torne o script executável:
-
-```bash
-sudo chmod +x /var/www/trafficpro/deploy.sh
-```
-
-Para fazer deploy:
-
-```bash
-sudo /var/www/trafficpro/deploy.sh
-```
-
-#### 7. Configuração de Deploy com GitHub Actions (Opcional)
-
-Crie `.github/workflows/deploy.yml` no seu repositório:
-
-```yaml
-name: Deploy to VPS
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          cd /var/www/trafficpro
-          ./deploy.sh
-```
-
-Configure os secrets no GitHub:
-- `VPS_HOST`: IP do seu servidor
-- `VPS_USERNAME`: usuário SSH (geralmente root)
-- `VPS_SSH_KEY`: chave SSH privada
-
-#### 8. Monitoramento e Logs
-
-```bash
-# Ver logs do Nginx
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
-
-# Verificar status do Nginx
-sudo systemctl status nginx
-
-# Reiniciar Nginx se necessário
-sudo systemctl restart nginx
-
-# Verificar uso de recursos
-htop  # ou top
-
-# Verificar espaço em disco
-df -h
-```
-
-#### 9. Configuração de PM2 para SPA (Alternativa)
-
-Se preferir usar PM2 para servir a aplicação:
-
-```bash
-# Instalar PM2 globalmente
-sudo npm install -g pm2
-
-# Criar servidor Node.js simples
-sudo nano /var/www/trafficpro/server.js
-```
-
-Adicione:
-
-```javascript
-const express = require('express');
-const path = require('path');
-const app = express();
-
-app.use(express.static(path.join(__dirname, 'dist')));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`TrafficPro rodando na porta ${PORT}`);
-});
-```
-
-```bash
-# Instalar express
-cd /var/www/trafficpro
-sudo npm install express
-
-# Iniciar com PM2
-sudo pm2 start server.js --name trafficpro
-
-# Configurar inicialização automática
-sudo pm2 startup
-sudo pm2 save
-
-# Comandos úteis do PM2
-sudo pm2 status
-sudo pm2 logs trafficpro
-sudo pm2 restart trafficpro
-```
-
-Configure o Nginx como proxy reverso (atualize `/etc/nginx/sites-available/trafficpro`):
-
-```nginx
-server {
-    listen 80;
-    server_name seu-dominio.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-#### 10. Backup e Manutenção
-
-```bash
-# Script de backup automático
-sudo nano /var/www/backup.sh
-```
-
-Adicione:
-
-```bash
-#!/bin/bash
-BACKUP_DIR="/var/backups/trafficpro"
-mkdir -p $BACKUP_DIR
-
-# Backup do código
-tar -czf $BACKUP_DIR/trafficpro_$(date +%Y%m%d).tar.gz /var/www/trafficpro
-
-# Manter apenas backups dos últimos 7 dias
-find $BACKUP_DIR -name "trafficpro_*.tar.gz" -mtime +7 -delete
-```
-
-Configure cron para backup diário:
-
-```bash
-sudo crontab -e
-```
-
-Adicione:
-
-```bash
-# Backup diário às 2h da manhã
-0 2 * * * /var/www/backup.sh
-```
-
-#### 11. Otimizações de Performance
-
-```bash
-# Instalar e configurar Redis (cache)
-sudo apt install redis-server -y
-sudo systemctl enable redis-server
-
-# Configurar swap (se tiver menos de 4GB RAM)
-sudo fallocate -l 2G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
-
-#### 12. Segurança Adicional
-
-```bash
-# Configurar fail2ban (proteção contra brute force)
-sudo apt install fail2ban -y
-sudo systemctl enable fail2ban
-
-# Desabilitar login root via SSH (recomendado)
-sudo nano /etc/ssh/sshd_config
-# Altere: PermitRootLogin no
-
-# Reiniciar SSH
-sudo systemctl restart sshd
-
-# Configurar atualizações automáticas de segurança
-sudo apt install unattended-upgrades -y
-sudo dpkg-reconfigure -plow unattended-upgrades
-```
-
-#### 13. Troubleshooting Comum
-
-**Problema: Site não carrega**
-```bash
-# Verificar se Nginx está rodando
-sudo systemctl status nginx
-
-# Verificar logs de erro
-sudo tail -f /var/log/nginx/error.log
-
-# Testar configuração
-sudo nginx -t
-```
-
-**Problema: Erro 502 Bad Gateway**
-```bash
-# Se usando PM2, verificar status
-sudo pm2 status
-sudo pm2 logs trafficpro
-
-# Reiniciar aplicação
-sudo pm2 restart trafficpro
-```
-
-**Problema: Certificado SSL expirado**
-```bash
-# Renovar manualmente
-sudo certbot renew
-
-# Verificar renovação automática
-sudo systemctl status certbot.timer
-```
-
-**Problema: Sem espaço em disco**
-```bash
-# Limpar logs antigos
-sudo journalctl --vacuum-time=7d
-
-# Limpar cache do npm
-sudo npm cache clean --force
-
-# Remover pacotes não utilizados
-sudo apt autoremove -y
-```
-
-#### 14. Checklist de Deploy
-
-- [ ] Servidor atualizado e configurado
-- [ ] Node.js instalado (v18+)
-- [ ] Projeto clonado e build realizado
-- [ ] Nginx configurado e testado
-- [ ] SSL configurado com Let's Encrypt
-- [ ] Firewall (UFW) configurado
-- [ ] Script de deploy criado
-- [ ] Backups automáticos configurados
-- [ ] Monitoramento ativo
-- [ ] Documentação de acesso e credenciais
-- [ ] Fail2ban configurado
-- [ ] Testes de carga e performance realizados
-
-### Configuração de Domínio Personalizado
-
-1. Configure os registros DNS:
-   ```
-   Tipo: A
-   Nome: @ (ou subdomínio desejado)
-   Valor: 185.158.133.1
-   ```
-
-2. No Lovable, vá em **Settings > Domains**
-
-3. Adicione seu domínio e aguarde a verificação
-
-4. Aguarde a propagação DNS (pode levar até 48h)
-
-📖 **[Documentação de Domínio Customizado](https://docs.lovable.dev/features/custom-domain)**
 
 ---
 
