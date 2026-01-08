@@ -211,6 +211,68 @@ export const exportBriefingToPDF = (briefing: any, clientName: string) => {
   doc.save(`briefing-${clientName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
 };
 
+export const exportContractToPDF = (
+  contractContent: string,
+  clientName: string,
+  managerName: string
+) => {
+  const doc = new jsPDF();
+  
+  const primaryColor: [number, number, number] = [16, 185, 129];
+  const headerTextColor: [number, number, number] = [255, 255, 255];
+  const darkText: [number, number, number] = [0, 0, 0];
+  const grayText: [number, number, number] = [128, 128, 128];
+
+  // Header
+  doc.setFillColor(...primaryColor);
+  doc.rect(0, 0, 210, 35, 'F');
+  
+  doc.setTextColor(...headerTextColor);
+  doc.setFontSize(18);
+  doc.text('Contrato de Prestação de Serviços', 105, 15, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${clientName}`, 105, 25, { align: 'center' });
+  doc.setFontSize(10);
+  doc.text(`Gestor: ${managerName}`, 105, 32, { align: 'center' });
+
+  // Contract content
+  doc.setTextColor(...darkText);
+  doc.setFontSize(10);
+  
+  const lines = doc.splitTextToSize(contractContent, 180);
+  let yPosition = 50;
+  const lineHeight = 5;
+  const pageHeight = 280;
+
+  lines.forEach((line: string) => {
+    if (yPosition + lineHeight > pageHeight) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    doc.text(line, 14, yPosition);
+    yPosition += lineHeight;
+  });
+
+  // Footer on all pages
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(...grayText);
+    doc.text(
+      `Página ${i} de ${pageCount} - Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
+      105,
+      287,
+      { align: 'center' }
+    );
+  }
+
+  // Save
+  const fileName = `contrato-${clientName.toLowerCase().replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+  doc.save(fileName);
+};
+
 export const exportStrategicPlanToPDF = (plan: any, clientName: string) => {
   const doc = new jsPDF();
   
