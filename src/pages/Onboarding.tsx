@@ -31,7 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Send, Loader2, CheckCircle, BookOpen, DollarSign, AlertCircle, Clock, Trash2, Check, Calculator } from "lucide-react";
+import { FileText, Send, Loader2, CheckCircle, BookOpen, DollarSign, AlertCircle, Clock, Trash2, Check, Calculator, Download } from "lucide-react";
+import { exportContractToPDF } from "@/lib/pdfExport";
 import { PaymentForm } from "@/components/onboarding/PaymentForm";
 import { BriefingForm } from "@/components/onboarding/BriefingForm";
 import { StrategyForm } from "@/components/onboarding/StrategyForm";
@@ -308,6 +309,24 @@ export default function Onboarding() {
                       <span className="sm:hidden">Enviar Contrato</span>
                     </>
                   )}
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  className="gap-2 w-full sm:w-auto"
+                  size="lg"
+                  onClick={() => {
+                    const client = clients?.find(c => c.id === selectedClient);
+                    exportContractToPDF(
+                      contractContent,
+                      client?.name || "Cliente",
+                      managerName || "Gestor"
+                    );
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Baixar PDF</span>
+                  <span className="sm:hidden">PDF</span>
                 </Button>
 
                 <Button
